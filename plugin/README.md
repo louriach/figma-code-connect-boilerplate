@@ -14,7 +14,7 @@ Scans a Figma file for main components, lets you pick which ones to connect, and
 ```bash
 cd plugin
 npm install
-npm run build
+npm run build   # compiles src/main.ts → src/main.js (required before loading in Figma)
 ```
 
 ### Loading in Figma

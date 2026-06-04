@@ -70,10 +70,11 @@ figma-code-connect-boilerplate/
 The plugin runs locally — no Figma Community listing required.
 
 1. Clone this repository
-2. In Figma, go to **Menu → Plugins → Development → Import plugin from manifest**
-3. Select `plugin/manifest.json`
-4. Open any Figma file containing your component library
-5. Run the plugin from **Plugins → Development → Code Connect Export**
+2. Run `cd plugin && npm install && npm run build`
+3. In Figma, go to **Menu → Plugins → Development → Import plugin from manifest**
+4. Select `plugin/manifest.json`
+5. Open any Figma file containing your component library
+6. Run the plugin from **Plugins → Development → Code Connect Export**
 
 > **Sharing across your org:** If you want the plugin available to your whole team without everyone cloning the repo, Figma supports private org plugins. That's a future option — not required to get started.
 

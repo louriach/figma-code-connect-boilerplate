@@ -1,0 +1,13 @@
+{
+  "name": "code-connect-export-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --outfile=src/main.js --target=es6",
+    "watch": "esbuild src/main.ts --bundle --outfile=src/main.js --target=es6 --watch"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.101.0",
+    "esbuild": "^0.21.0"
+  }
+}

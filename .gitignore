@@ -8,6 +8,7 @@ node_modules/
 # Build output
 plugin/dist/
 plugin/build/
+plugin/src/main.js
 
 # macOS
 .DS_Store
