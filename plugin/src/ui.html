@@ -202,19 +202,69 @@
     .component-row.checked { background: var(--accent-dim); }
     .component-row.checked:hover { background: var(--accent-hover); }
 
+    .component-row:hover .btn-locate { opacity: 1; }
+
+    .component-meta {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
     .component-name {
       font-size: var(--size-base);
       color: var(--text-primary);
-      flex: 1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .component-variant-count {
+    .component-page {
       font-size: var(--size-xs);
       color: var(--text-tertiary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .component-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       flex-shrink: 0;
+    }
+
+    .component-prop-count {
+      font-size: var(--size-xs);
+      color: var(--text-tertiary);
+    }
+
+    .btn-locate {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: none;
+      color: var(--text-tertiary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s, background 0.15s;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .btn-locate:hover {
+      color: var(--text-accent);
+      background: var(--accent-dim);
+    }
+
+    .btn-locate svg {
+      width: 13px;
+      height: 13px;
     }
 
     /* ── Custom checkbox ── */
@@ -496,10 +546,20 @@
               <div class="checkbox-wrap">
                 <input type="checkbox" data-node-check="${c.nodeId}" ${selected.has(c.nodeId) ? 'checked' : ''} />
               </div>
-              <div class="component-name">${leafName(c.figmaName)}</div>
-              ${c.properties && c.properties.length > 0
-                ? `<div class="component-variant-count">${c.properties.length} prop${c.properties.length !== 1 ? 's' : ''}</div>`
-                : ''}
+              <div class="component-meta">
+                <div class="component-name">${leafName(c.figmaName)}</div>
+                ${c.page ? `<div class="component-page">${c.page}</div>` : ''}
+              </div>
+              <div class="component-right">
+                ${c.properties && c.properties.length > 0
+                  ? `<div class="component-prop-count">${c.properties.length} prop${c.properties.length !== 1 ? 's' : ''}</div>`
+                  : ''}
+                <button class="btn-locate" data-locate="${c.nodeId}" title="Jump to component in Figma">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           `).join('')}
         </div>
@@ -557,6 +617,7 @@
     document.querySelectorAll('[data-node]').forEach(row => {
       row.addEventListener('click', (e) => {
         if (e.target.closest('.checkbox-wrap')) return;
+        if (e.target.closest('.btn-locate')) return;
         const nodeId = row.dataset.node;
         toggleNode(nodeId);
       });
@@ -566,6 +627,16 @@
     document.querySelectorAll('[data-node-check]').forEach(cb => {
       cb.addEventListener('change', () => {
         toggleNode(cb.dataset.nodeCheck);
+      });
+    });
+
+    // Locate button — tells main.ts to scroll and zoom to this node
+    document.querySelectorAll('[data-locate]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        parent.postMessage({
+          pluginMessage: { type: 'locate', nodeId: btn.dataset.locate }
+        }, '*');
       });
     });
   }
@@ -597,7 +668,10 @@
   document.getElementById('search').addEventListener('input', (e) => {
     const q = e.target.value.toLowerCase().trim();
     const filtered = q
-      ? allComponents.filter(c => c.figmaName.toLowerCase().includes(q))
+      ? allComponents.filter(c =>
+          c.figmaName.toLowerCase().includes(q) ||
+          (c.page && c.page.toLowerCase().includes(q))
+        )
       : allComponents;
     render(filtered);
     refreshCheckboxes();
@@ -606,7 +680,10 @@
   function currentComponents() {
     const q = document.getElementById('search').value.toLowerCase().trim();
     return q
-      ? allComponents.filter(c => c.figmaName.toLowerCase().includes(q))
+      ? allComponents.filter(c =>
+          c.figmaName.toLowerCase().includes(q) ||
+          (c.page && c.page.toLowerCase().includes(q))
+        )
       : allComponents;
   }
 
@@ -668,11 +745,24 @@
     setTimeout(() => toast.classList.remove('visible'), 2500);
   }
 
-  // Handle export-done message
+  // Handle messages from main.ts
   window.addEventListener('message', (event) => {
     const msg = event.data.pluginMessage;
-    if (msg && msg.type === 'export-done') {
-      showToast(`Exported ${msg.count} components`, 'success');
+    if (!msg) return;
+
+    // Trigger file download
+    if (msg.type === 'download') {
+      const blob = new Blob([msg.json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = msg.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    if (msg.type === 'export-done') {
+      showToast(`Exported ${msg.count} component${msg.count !== 1 ? 's' : ''}`, 'success');
     }
   });
 </script>
