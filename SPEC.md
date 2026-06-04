@@ -335,7 +335,7 @@ Re-run the Figma Code Connect plugin in Figma, export a new `figma-components.js
 
 ## Open questions
 
-1. **Plugin distribution** — Figma Community (public) vs. private org plugin? Private is faster to ship but limits reach.
+1. **Plugin distribution** — Decided: local dev plugin only. Users clone the repo and load it via Figma's Development plugin import. Private org plugin is a future option for teams who want to share it without everyone cloning the repo.
 2. **Repo access from plugin** — the plugin cannot read the codebase directly; the skill handles all repo work. Is the file-handoff (JSON export) sufficient, or do users want a live preview of the code match inside the plugin UI?
 3. **Variant handling** — multiple Figma components in the same group (e.g. `Button / Primary`, `Button / Secondary`) often map to a single code component with a `variant` prop. The skill should detect this pattern and generate one `.figma.ts` per code component, not one per Figma component. Needs explicit handling.
 4. **Framework detection** — the skill already detects the framework (React, Vue, etc.) from the repo. Should the plugin export include a framework hint, or leave detection entirely to the skill?

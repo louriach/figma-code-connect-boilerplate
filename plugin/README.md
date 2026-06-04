@@ -19,10 +19,14 @@ npm run build
 
 ### Loading in Figma
 
+The plugin runs locally as a development plugin — no Figma Community publishing required.
+
 1. In Figma, go to **Menu → Plugins → Development → Import plugin from manifest**
 2. Select `plugin/manifest.json`
 3. Open your component library file
 4. Run via **Plugins → Development → Code Connect Export**
+
+> **For teams:** Figma supports private org plugins if you want to share this across your organisation without everyone cloning the repo. That's a future option once the plugin is stable.
 
 ### Build
 
