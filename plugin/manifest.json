@@ -1,0 +1,9 @@
+{
+  "name": "Code Connect Export",
+  "id": "code-connect-export",
+  "api": "1.0.0",
+  "main": "src/main.js",
+  "ui": "src/ui.html",
+  "editorType": ["figma"],
+  "permissions": ["currentuser"]
+}

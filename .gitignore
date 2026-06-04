@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Environment variables — never commit your Figma access token
+.env
+.env.local
+
+# Build output
+plugin/dist/
+plugin/build/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
