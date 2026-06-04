@@ -38,8 +38,8 @@ function getGroup(name: string): string {
   return parts.length > 1 ? parts[0].trim() : 'Ungrouped';
 }
 
-/** Extract property names from a component node. */
-function getProperties(node: ComponentNode): string[] {
+/** Extract property names from a component or component set node. */
+function getProperties(node: ComponentNode | ComponentSetNode): string[] {
   if (!node.componentPropertyDefinitions) return [];
   return Object.keys(node.componentPropertyDefinitions);
 }
@@ -55,14 +55,38 @@ function getFileKey(): string {
   return figma.fileKey ?? 'unknown';
 }
 
-/** Scan a single page and return its components. */
+/** Scan a single page and return its components.
+ *
+ * Figma has three relevant node types:
+ *   COMPONENT_SET  - the container for a set of variants (e.g. "Button")
+ *   COMPONENT      - either a standalone component OR a variant inside a set
+ *
+ * For Code Connect we want one entry per logical component:
+ *   - COMPONENT_SET nodes  -> include, read properties from the set
+ *   - Standalone COMPONENTs (parent is not a COMPONENT_SET) -> include
+ *   - Variant COMPONENTs   (parent IS a COMPONENT_SET) -> skip; covered by the set
+ */
 function scanPage(page: PageNode): ComponentExport[] {
   const fileKey = getFileKey();
   const results: ComponentExport[] = [];
 
-  const components = page.findAllWithCriteria({ types: ['COMPONENT'] });
+  // Collect component sets (grouped variants)
+  const componentSets = page.findAllWithCriteria({ types: ['COMPONENT_SET'] }) as ComponentSetNode[];
+  for (const node of componentSets) {
+    results.push({
+      nodeId: node.id,
+      figmaName: node.name,
+      group: getGroup(node.name),
+      page: page.name,
+      url: buildUrl(fileKey, node.id),
+      properties: getProperties(node),
+    });
+  }
 
+  // Collect standalone components (not children of a component set)
+  const components = page.findAllWithCriteria({ types: ['COMPONENT'] }) as ComponentNode[];
   for (const node of components) {
+    if (node.parent?.type === 'COMPONENT_SET') continue; // variant - skip
     results.push({
       nodeId: node.id,
       figmaName: node.name,
