@@ -423,6 +423,118 @@
     .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.success { border-color: var(--accent); color: var(--text-accent); }
 
+    /* ── Welcome screen ── */
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 24px 20px 20px;
+      gap: 0;
+      overflow-y: auto;
+    }
+
+    .welcome-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(168, 213, 181, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    .welcome-logo svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent);
+    }
+
+    .welcome-heading {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .welcome-body {
+      font-size: var(--size-sm);
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .welcome-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 24px;
+    }
+
+    .welcome-step {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .welcome-step:last-child {
+      border-bottom: none;
+    }
+
+    .step-number {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      font-size: var(--size-xs);
+      font-weight: 600;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-content {}
+
+    .step-title {
+      font-size: var(--size-sm);
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .step-desc {
+      font-size: var(--size-xs);
+      color: var(--text-tertiary);
+      line-height: 1.5;
+      margin-top: 1px;
+    }
+
+    .welcome-footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .welcome-note {
+      flex: 1;
+      font-size: var(--size-xs);
+      color: var(--text-tertiary);
+      line-height: 1.5;
+    }
+
     /* ── Utility ── */
     .hidden { display: none !important; }
   </style>
@@ -431,13 +543,13 @@
 
 <div class="layout">
 
-  <!-- Header -->
-  <div class="header">
+  <!-- Header (hidden on welcome screen) -->
+  <div class="header hidden" id="header">
     <div class="header-title">Code Connect Export</div>
     <div class="header-subtitle" id="header-subtitle">Choose pages to scan</div>
   </div>
 
-  <!-- Toolbar: hidden on page-select step, shown on component step -->
+  <!-- Toolbar: shown on component step only -->
   <div class="toolbar hidden" id="toolbar">
     <input class="search" type="text" placeholder="Filter components…" id="search" />
     <button class="btn-text" id="btn-select-all">Select all</button>
@@ -445,8 +557,53 @@
     <button class="btn-text muted" id="btn-deselect-all">Clear</button>
   </div>
 
-  <!-- Scrollable content -->
-  <div class="list" id="list">
+  <!-- Welcome screen -->
+  <div class="welcome" id="welcome">
+    <div class="welcome-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="6"/>
+        <circle cx="12" cy="12" r="2"/>
+      </svg>
+    </div>
+    <div class="welcome-heading">Connect your Figma components to your codebase</div>
+    <div class="welcome-body">
+      This plugin scans your Figma file and exports a list of components that
+      your development team can use to link Figma directly to your real code —
+      so developers see live code snippets instead of auto-generated placeholders
+      when inspecting components in Dev Mode.
+    </div>
+    <div class="welcome-steps">
+      <div class="welcome-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <div class="step-title">Pick your pages</div>
+          <div class="step-desc">Choose which pages in this file contain the components you want to connect.</div>
+        </div>
+      </div>
+      <div class="welcome-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <div class="step-title">Select components</div>
+          <div class="step-desc">Review every main component found and check the ones you want to include.</div>
+        </div>
+      </div>
+      <div class="welcome-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <div class="step-title">Export</div>
+          <div class="step-desc">Download a <code style="font-size:10px;color:var(--text-accent)">figma-components.json</code> file and hand it to your Claude skill to finish the setup.</div>
+        </div>
+      </div>
+    </div>
+    <div class="welcome-footer">
+      <div class="welcome-note">You'll need a Figma Organisation or Enterprise plan for Dev Mode to display code snippets.</div>
+    </div>
+  </div>
+
+  <!-- Scrollable content (pages + components) -->
+  <div class="list hidden" id="list">
     <div class="empty" id="loading-pages">
       <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
     </div>
@@ -455,7 +612,7 @@
   <!-- Footer -->
   <div class="footer">
     <div class="footer-summary" id="summary"></div>
-    <button class="btn-primary" id="btn-action" disabled>Scan selected pages</button>
+    <button class="btn-primary" id="btn-action">Get started</button>
   </div>
 
 </div>
@@ -464,8 +621,8 @@
 
 <script>
   // ── State ─────────────────────────────────────────────────────────────────
-  const STEP = { PAGES: 'pages', SCANNING: 'scanning', COMPONENTS: 'components' };
-  let step = STEP.PAGES;
+  const STEP = { WELCOME: 'welcome', PAGES: 'pages', SCANNING: 'scanning', COMPONENTS: 'components' };
+  let step = STEP.WELCOME;
 
   let allPages = [];          // [{ id, name }]
   let selectedPages = new Set();
@@ -484,9 +641,8 @@
 
       case 'pages':
         allPages = msg.pages;
-        // Pre-select all pages
         allPages.forEach(p => selectedPages.add(p.id));
-        renderPages();
+        // Pages are ready but we don't show them until the user clicks Get started
         updateFooter();
         break;
 
@@ -807,7 +963,12 @@
     const summary = document.getElementById('summary');
     const btn = document.getElementById('btn-action');
 
-    if (step === STEP.PAGES) {
+    if (step === STEP.WELCOME) {
+      summary.innerHTML = '';
+      btn.textContent = 'Get started';
+      btn.disabled = allPages.length === 0; // disabled only while pages haven't loaded yet
+
+    } else if (step === STEP.PAGES) {
       const n = selectedPages.size;
       summary.innerHTML = n === 0
         ? 'No pages selected'
@@ -832,12 +993,24 @@
 
   // ── Footer button action ──────────────────────────────────────────────────
   document.getElementById('btn-action').addEventListener('click', () => {
-    if (step === STEP.PAGES) {
+    if (step === STEP.WELCOME) {
+      showPages();
+    } else if (step === STEP.PAGES) {
       startScan();
     } else if (step === STEP.COMPONENTS) {
       exportComponents();
     }
   });
+
+  function showPages() {
+    step = STEP.PAGES;
+    document.getElementById('welcome').classList.add('hidden');
+    document.getElementById('header').classList.remove('hidden');
+    document.getElementById('list').classList.remove('hidden');
+    document.getElementById('header-subtitle').textContent = 'Choose pages to scan';
+    renderPages();
+    updateFooter();
+  }
 
   function startScan() {
     step = STEP.SCANNING;
