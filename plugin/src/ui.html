@@ -16,7 +16,7 @@
       --border:       #333333;
       --border-hover: #444444;
 
-      --accent:       #a8d5b5;   /* soft pastel green */
+      --accent:       #a8d5b5;
       --accent-dim:   rgba(168, 213, 181, 0.12);
       --accent-hover: rgba(168, 213, 181, 0.2);
 
@@ -29,14 +29,11 @@
       --size-base: 13px;
       --size-sm:   11px;
       --size-xs:   10px;
-      --size-lg:   15px;
 
       --radius-sm: 4px;
       --radius-md: 6px;
-      --radius-lg: 8px;
     }
 
-    /* ── Base ── */
     html, body {
       background: var(--bg);
       color: var(--text-primary);
@@ -47,7 +44,6 @@
       overflow: hidden;
     }
 
-    /* ── Layout ── */
     .layout {
       display: flex;
       flex-direction: column;
@@ -72,9 +68,10 @@
       font-size: var(--size-sm);
       color: var(--text-secondary);
       margin-top: 2px;
+      transition: opacity 0.2s;
     }
 
-    /* ── Toolbar ── */
+    /* ── Toolbar (components step only) ── */
     .toolbar {
       display: flex;
       align-items: center;
@@ -124,7 +121,7 @@
       flex-shrink: 0;
     }
 
-    /* ── Component list ── */
+    /* ── Scrollable body ── */
     .list {
       flex: 1;
       overflow-y: auto;
@@ -135,7 +132,41 @@
     .list::-webkit-scrollbar-track { background: transparent; }
     .list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    /* ── Group ── */
+    /* ── Page rows (step 1) ── */
+    .page-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px;
+      cursor: pointer;
+      transition: background 0.1s;
+      user-select: none;
+    }
+
+    .page-row:hover { background: var(--surface-alt); }
+    .page-row.checked { background: var(--accent-dim); }
+    .page-row.checked:hover { background: var(--accent-hover); }
+
+    .page-name {
+      font-size: var(--size-base);
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    .page-scanning {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--size-xs);
+      color: var(--text-tertiary);
+    }
+
+    .page-done {
+      font-size: var(--size-xs);
+      color: var(--text-accent);
+    }
+
+    /* ── Component groups (step 2) ── */
     .group { margin-bottom: 2px; }
 
     .group-header {
@@ -160,10 +191,6 @@
 
     .group-chevron.open { transform: rotate(90deg); }
 
-    .group-checkbox {
-      flex-shrink: 0;
-    }
-
     .group-name {
       font-size: var(--size-sm);
       font-weight: 600;
@@ -178,13 +205,7 @@
       color: var(--text-tertiary);
     }
 
-    .group-count .selected-count {
-      color: var(--text-accent);
-    }
-
-    .group-items {
-      overflow: hidden;
-    }
+    .group-count .selected-count { color: var(--text-accent); }
 
     .group-items.collapsed { display: none; }
 
@@ -201,7 +222,6 @@
     .component-row:hover { background: var(--surface-alt); }
     .component-row.checked { background: var(--accent-dim); }
     .component-row.checked:hover { background: var(--accent-hover); }
-
     .component-row:hover .btn-locate { opacity: 1; }
 
     .component-meta {
@@ -257,14 +277,17 @@
       padding: 0;
     }
 
-    .btn-locate:hover {
-      color: var(--text-accent);
-      background: var(--accent-dim);
-    }
+    .btn-locate:hover { color: var(--text-accent); background: var(--accent-dim); }
+    .btn-locate svg { width: 13px; height: 13px; }
 
-    .btn-locate svg {
-      width: 13px;
-      height: 13px;
+    /* ── Scanning progress row (appears inline in list during scan) ── */
+    .scan-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-size: var(--size-sm);
+      color: var(--text-secondary);
     }
 
     /* ── Custom checkbox ── */
@@ -300,27 +323,35 @@
     .checkbox-wrap input[type="checkbox"]:checked::after {
       content: '';
       position: absolute;
-      left: 3px;
-      top: 1px;
-      width: 6px;
-      height: 9px;
+      left: 3px; top: 1px;
+      width: 6px; height: 9px;
       border: 1.5px solid var(--bg);
-      border-top: none;
-      border-left: none;
+      border-top: none; border-left: none;
       transform: rotate(45deg) scaleY(0.85);
     }
 
     .checkbox-wrap input[type="checkbox"]:indeterminate::after {
       content: '';
       position: absolute;
-      left: 2.5px;
-      top: 5px;
-      width: 7px;
-      height: 1.5px;
+      left: 2.5px; top: 5px;
+      width: 7px; height: 1.5px;
       background: var(--accent);
     }
 
-    /* ── Empty state ── */
+    /* ── Spinner ── */
+    .spinner {
+      width: 11px;
+      height: 11px;
+      border: 1.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Empty / idle states ── */
     .empty {
       display: flex;
       flex-direction: column;
@@ -333,34 +364,6 @@
       padding: 24px;
       text-align: center;
     }
-
-    .empty-icon {
-      font-size: 24px;
-      opacity: 0.4;
-    }
-
-    /* ── Loading state ── */
-    .loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      gap: 10px;
-      color: var(--text-secondary);
-      font-size: var(--size-sm);
-    }
-
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Footer ── */
     .footer {
@@ -378,12 +381,9 @@
       color: var(--text-secondary);
     }
 
-    .footer-summary strong {
-      color: var(--text-accent);
-      font-weight: 600;
-    }
+    .footer-summary strong { color: var(--text-accent); font-weight: 600; }
 
-    .btn-export {
+    .btn-primary {
       background: var(--accent);
       color: #1a1a1a;
       border: none;
@@ -397,13 +397,9 @@
       white-space: nowrap;
     }
 
-    .btn-export:hover { opacity: 0.88; }
-    .btn-export:active { transform: scale(0.98); }
-    .btn-export:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
     /* ── Toast ── */
     .toast {
@@ -424,12 +420,11 @@
       z-index: 100;
     }
 
-    .toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.success { border-color: var(--accent); color: var(--text-accent); }
+
+    /* ── Utility ── */
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -439,29 +434,28 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title">Code Connect Export</div>
-    <div class="header-subtitle">Select components to connect to your codebase</div>
+    <div class="header-subtitle" id="header-subtitle">Choose pages to scan</div>
   </div>
 
-  <!-- Toolbar -->
-  <div class="toolbar">
+  <!-- Toolbar: hidden on page-select step, shown on component step -->
+  <div class="toolbar hidden" id="toolbar">
     <input class="search" type="text" placeholder="Filter components…" id="search" />
     <button class="btn-text" id="btn-select-all">Select all</button>
     <div class="toolbar-divider"></div>
     <button class="btn-text muted" id="btn-deselect-all">Clear</button>
   </div>
 
-  <!-- Component list -->
+  <!-- Scrollable content -->
   <div class="list" id="list">
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <span>Scanning components…</span>
+    <div class="empty" id="loading-pages">
+      <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
     </div>
   </div>
 
   <!-- Footer -->
   <div class="footer">
-    <div class="footer-summary" id="summary">Loading…</div>
-    <button class="btn-export" id="btn-export" disabled>Export</button>
+    <div class="footer-summary" id="summary"></div>
+    <button class="btn-primary" id="btn-action" disabled>Scan selected pages</button>
   </div>
 
 </div>
@@ -469,29 +463,131 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── State ──────────────────────────────────────────────────────────────────
-  let allComponents = [];   // raw from plugin
-  let groups = {};          // { groupName: [component, …] }
-  let selected = new Set(); // nodeIds
-  let collapsed = new Set();
+  // ── State ─────────────────────────────────────────────────────────────────
+  const STEP = { PAGES: 'pages', SCANNING: 'scanning', COMPONENTS: 'components' };
+  let step = STEP.PAGES;
 
-  // ── Message from plugin sandbox ───────────────────────────────────────────
+  let allPages = [];          // [{ id, name }]
+  let selectedPages = new Set();
+  let allComponents = [];     // accumulated across scanned pages
+  let selectedNodes = new Set();
+  let collapsed = new Set();
+  let scanTotal = 0;
+  let scanDone = 0;
+
+  // ── Messages from main.ts ─────────────────────────────────────────────────
   window.onmessage = (event) => {
     const msg = event.data.pluginMessage;
     if (!msg) return;
 
-    if (msg.type === 'components') {
-      allComponents = msg.components;
-      buildGroups(allComponents);
-      render(allComponents);
-      // Select all by default
-      allComponents.forEach(c => selected.add(c.nodeId));
-      refreshCheckboxes();
-      updateSummary();
+    switch (msg.type) {
+
+      case 'pages':
+        allPages = msg.pages;
+        // Pre-select all pages
+        allPages.forEach(p => selectedPages.add(p.id));
+        renderPages();
+        updateFooter();
+        break;
+
+      case 'scan-page-start':
+        markPageScanning(msg.pageId);
+        break;
+
+      case 'scan-page-done':
+        markPageDone(msg.pageId, msg.components.length);
+        // Append incoming components and re-render the growing list
+        allComponents = allComponents.concat(msg.components);
+        msg.components.forEach(c => selectedNodes.add(c.nodeId));
+        scanDone++;
+        renderComponentsIncremental();
+        updateFooter();
+        break;
+
+      case 'scan-complete':
+        step = STEP.COMPONENTS;
+        document.getElementById('toolbar').classList.remove('hidden');
+        document.getElementById('header-subtitle').textContent =
+          'Select components to connect to your codebase';
+        updateFooter();
+        break;
+
+      case 'download': {
+        const blob = new Blob([msg.json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = msg.filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        break;
+      }
+
+      case 'export-done':
+        showToast(`Exported ${msg.count} component${msg.count !== 1 ? 's' : ''}`, 'success');
+        break;
     }
   };
 
-  // ── Group building ────────────────────────────────────────────────────────
+  // ── Step 1: Page list ─────────────────────────────────────────────────────
+  function renderPages() {
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+
+    if (allPages.length === 0) {
+      list.innerHTML = `<div class="empty">No pages found</div>`;
+      return;
+    }
+
+    allPages.forEach(page => {
+      const row = document.createElement('div');
+      row.className = `page-row ${selectedPages.has(page.id) ? 'checked' : ''}`;
+      row.dataset.pageId = page.id;
+      row.innerHTML = `
+        <div class="checkbox-wrap">
+          <input type="checkbox" data-page-check="${page.id}"
+            ${selectedPages.has(page.id) ? 'checked' : ''} />
+        </div>
+        <div class="page-name">${page.name}</div>
+        <div class="page-status" id="page-status-${page.id}"></div>
+      `;
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.checkbox-wrap')) return;
+        togglePage(page.id);
+      });
+      row.querySelector('[data-page-check]').addEventListener('change', () => {
+        togglePage(page.id);
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function togglePage(pageId) {
+    if (selectedPages.has(pageId)) {
+      selectedPages.delete(pageId);
+    } else {
+      selectedPages.add(pageId);
+    }
+    const row = document.querySelector(`[data-page-id="${pageId}"]`);
+    const cb = document.querySelector(`[data-page-check="${pageId}"]`);
+    if (row) row.classList.toggle('checked', selectedPages.has(pageId));
+    if (cb) cb.checked = selectedPages.has(pageId);
+    updateFooter();
+  }
+
+  function markPageScanning(pageId) {
+    const el = document.getElementById(`page-status-${pageId}`);
+    if (el) el.innerHTML = `<div class="page-scanning"><div class="spinner"></div> Scanning…</div>`;
+  }
+
+  function markPageDone(pageId, count) {
+    const el = document.getElementById(`page-status-${pageId}`);
+    if (el) el.innerHTML = `<div class="page-done">${count} component${count !== 1 ? 's' : ''}</div>`;
+  }
+
+  // ── Step 2: Component list (incremental) ──────────────────────────────────
+  let groups = {};
+
   function buildGroups(components) {
     groups = {};
     components.forEach(c => {
@@ -501,35 +597,31 @@
     });
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-  function render(components) {
-    const list = document.getElementById('list');
-    document.getElementById('loading').remove();
-
-    if (components.length === 0) {
-      list.innerHTML = `
-        <div class="empty">
-          <div class="empty-icon">◻</div>
-          <div>No main components found in this file</div>
-        </div>`;
-      return;
+  function renderComponentsIncremental() {
+    // During scanning, show a growing list below the page rows
+    // We re-render the component section only, leaving page rows intact
+    let compSection = document.getElementById('comp-section');
+    if (!compSection) {
+      compSection = document.createElement('div');
+      compSection.id = 'comp-section';
+      document.getElementById('list').appendChild(compSection);
     }
 
-    buildGroups(components);
-    list.innerHTML = '';
+    buildGroups(allComponents);
+    compSection.innerHTML = '';
 
     Object.entries(groups).forEach(([groupName, items]) => {
+      const isCollapsed = collapsed.has(groupName);
+      const selectedInGroup = items.filter(c => selectedNodes.has(c.nodeId)).length;
+
       const groupEl = document.createElement('div');
       groupEl.className = 'group';
       groupEl.dataset.group = groupName;
-
-      const isCollapsed = collapsed.has(groupName);
-      const selectedInGroup = items.filter(c => selected.has(c.nodeId)).length;
-
       groupEl.innerHTML = `
         <div class="group-header" data-group-toggle="${groupName}">
           <svg class="group-chevron ${isCollapsed ? '' : 'open'}" viewBox="0 0 12 12" fill="none">
-            <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <div class="checkbox-wrap">
             <input type="checkbox" data-group-check="${groupName}" />
@@ -542,9 +634,11 @@
         </div>
         <div class="group-items ${isCollapsed ? 'collapsed' : ''}" data-group-items="${groupName}">
           ${items.map(c => `
-            <div class="component-row ${selected.has(c.nodeId) ? 'checked' : ''}" data-node="${c.nodeId}">
+            <div class="component-row ${selectedNodes.has(c.nodeId) ? 'checked' : ''}"
+                 data-node="${c.nodeId}">
               <div class="checkbox-wrap">
-                <input type="checkbox" data-node-check="${c.nodeId}" ${selected.has(c.nodeId) ? 'checked' : ''} />
+                <input type="checkbox" data-node-check="${c.nodeId}"
+                  ${selectedNodes.has(c.nodeId) ? 'checked' : ''} />
               </div>
               <div class="component-meta">
                 <div class="component-name">${leafName(c.figmaName)}</div>
@@ -554,9 +648,14 @@
                 ${c.properties && c.properties.length > 0
                   ? `<div class="component-prop-count">${c.properties.length} prop${c.properties.length !== 1 ? 's' : ''}</div>`
                   : ''}
-                <button class="btn-locate" data-locate="${c.nodeId}" title="Jump to component in Figma">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                <button class="btn-locate" data-locate="${c.nodeId}"
+                  title="Jump to component in Figma">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="6"/>
+                    <circle cx="12" cy="12" r="2"/>
                   </svg>
                 </button>
               </div>
@@ -564,12 +663,16 @@
           `).join('')}
         </div>
       `;
-
-      list.appendChild(groupEl);
+      compSection.appendChild(groupEl);
     });
 
     refreshGroupCheckboxes();
-    attachListeners();
+    attachComponentListeners();
+  }
+
+  function switchToComponentsView() {
+    // Hide page rows, show only comp-section with full-height scroll
+    document.getElementById('list').querySelectorAll('.page-row').forEach(r => r.remove());
   }
 
   function leafName(figmaName) {
@@ -577,9 +680,8 @@
     return parts[parts.length - 1].trim();
   }
 
-  // ── Event listeners ───────────────────────────────────────────────────────
-  function attachListeners() {
-    // Group toggle (collapse/expand)
+  // ── Listeners ─────────────────────────────────────────────────────────────
+  function attachComponentListeners() {
     document.querySelectorAll('[data-group-toggle]').forEach(el => {
       el.addEventListener('click', (e) => {
         if (e.target.closest('.checkbox-wrap')) return;
@@ -598,106 +700,93 @@
       });
     });
 
-    // Group checkbox
     document.querySelectorAll('[data-group-check]').forEach(cb => {
-      cb.addEventListener('change', (e) => {
+      cb.addEventListener('change', () => {
         const g = cb.dataset.groupCheck;
         const items = groups[g] || [];
-        if (e.target.checked) {
-          items.forEach(c => selected.add(c.nodeId));
+        if (cb.checked) {
+          items.forEach(c => selectedNodes.add(c.nodeId));
         } else {
-          items.forEach(c => selected.delete(c.nodeId));
+          items.forEach(c => selectedNodes.delete(c.nodeId));
         }
         refreshCheckboxes();
-        updateSummary();
+        updateFooter();
       });
     });
 
-    // Component row click
     document.querySelectorAll('[data-node]').forEach(row => {
       row.addEventListener('click', (e) => {
-        if (e.target.closest('.checkbox-wrap')) return;
-        if (e.target.closest('.btn-locate')) return;
-        const nodeId = row.dataset.node;
-        toggleNode(nodeId);
+        if (e.target.closest('.checkbox-wrap') || e.target.closest('.btn-locate')) return;
+        toggleNode(row.dataset.node);
       });
     });
 
-    // Component checkbox
     document.querySelectorAll('[data-node-check]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        toggleNode(cb.dataset.nodeCheck);
-      });
+      cb.addEventListener('change', () => toggleNode(cb.dataset.nodeCheck));
     });
 
-    // Locate button — tells main.ts to scroll and zoom to this node
     document.querySelectorAll('[data-locate]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        parent.postMessage({
-          pluginMessage: { type: 'locate', nodeId: btn.dataset.locate }
-        }, '*');
+        parent.postMessage({ pluginMessage: { type: 'locate', nodeId: btn.dataset.locate } }, '*');
       });
     });
   }
 
   function toggleNode(nodeId) {
-    if (selected.has(nodeId)) {
-      selected.delete(nodeId);
+    if (selectedNodes.has(nodeId)) {
+      selectedNodes.delete(nodeId);
     } else {
-      selected.add(nodeId);
+      selectedNodes.add(nodeId);
     }
     refreshCheckboxes();
-    updateSummary();
+    updateFooter();
   }
 
-  // ── Toolbar buttons ───────────────────────────────────────────────────────
+  // ── Toolbar (component step) ──────────────────────────────────────────────
   document.getElementById('btn-select-all').addEventListener('click', () => {
-    currentComponents().forEach(c => selected.add(c.nodeId));
+    filteredComponents().forEach(c => selectedNodes.add(c.nodeId));
     refreshCheckboxes();
-    updateSummary();
+    updateFooter();
   });
 
   document.getElementById('btn-deselect-all').addEventListener('click', () => {
-    currentComponents().forEach(c => selected.delete(c.nodeId));
+    filteredComponents().forEach(c => selectedNodes.delete(c.nodeId));
     refreshCheckboxes();
-    updateSummary();
+    updateFooter();
   });
 
-  // ── Search ────────────────────────────────────────────────────────────────
-  document.getElementById('search').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase().trim();
-    const filtered = q
-      ? allComponents.filter(c =>
-          c.figmaName.toLowerCase().includes(q) ||
-          (c.page && c.page.toLowerCase().includes(q))
-        )
-      : allComponents;
-    render(filtered);
+  document.getElementById('search').addEventListener('input', () => {
+    renderFilteredComponents();
     refreshCheckboxes();
   });
 
-  function currentComponents() {
+  function filteredComponents() {
     const q = document.getElementById('search').value.toLowerCase().trim();
     return q
       ? allComponents.filter(c =>
           c.figmaName.toLowerCase().includes(q) ||
-          (c.page && c.page.toLowerCase().includes(q))
-        )
+          (c.page && c.page.toLowerCase().includes(q)))
       : allComponents;
+  }
+
+  function renderFilteredComponents() {
+    const filtered = filteredComponents();
+    const compSection = document.getElementById('comp-section');
+    if (!compSection) return;
+    buildGroups(filtered);
+    // Re-use incremental renderer — it will reflect the filtered set
+    renderComponentsIncremental();
   }
 
   // ── Refresh UI state ──────────────────────────────────────────────────────
   function refreshCheckboxes() {
-    // Component rows
     document.querySelectorAll('[data-node]').forEach(row => {
-      const nodeId = row.dataset.node;
+      const checked = selectedNodes.has(row.dataset.node);
       const cb = row.querySelector('[data-node-check]');
-      const checked = selected.has(nodeId);
       if (cb) cb.checked = checked;
       row.classList.toggle('checked', checked);
     });
-
     refreshGroupCheckboxes();
   }
 
@@ -706,36 +795,69 @@
       const cb = document.querySelector(`[data-group-check="${groupName}"]`);
       const countEl = document.querySelector(`[data-group-selected="${groupName}"]`);
       if (!cb) return;
-
-      const selectedCount = items.filter(c => selected.has(c.nodeId)).length;
-      if (countEl) countEl.textContent = selectedCount;
-
-      cb.checked = selectedCount === items.length;
-      cb.indeterminate = selectedCount > 0 && selectedCount < items.length;
+      const n = items.filter(c => selectedNodes.has(c.nodeId)).length;
+      if (countEl) countEl.textContent = n;
+      cb.checked = n === items.length;
+      cb.indeterminate = n > 0 && n < items.length;
     });
   }
 
-  function updateSummary() {
-    const count = selected.size;
+  // ── Footer ────────────────────────────────────────────────────────────────
+  function updateFooter() {
     const summary = document.getElementById('summary');
-    const exportBtn = document.getElementById('btn-export');
+    const btn = document.getElementById('btn-action');
 
-    if (count === 0) {
-      summary.innerHTML = `<span>No components selected</span>`;
+    if (step === STEP.PAGES) {
+      const n = selectedPages.size;
+      summary.innerHTML = n === 0
+        ? 'No pages selected'
+        : `<strong>${n}</strong> page${n !== 1 ? 's' : ''} selected`;
+      btn.textContent = 'Scan selected pages';
+      btn.disabled = n === 0;
+
+    } else if (step === STEP.SCANNING) {
+      summary.innerHTML = `Scanning <strong>${scanDone}</strong> / ${scanTotal} pages…`;
+      btn.textContent = 'Scanning…';
+      btn.disabled = true;
+
     } else {
-      summary.innerHTML = `<strong>${count}</strong> component${count !== 1 ? 's' : ''} selected`;
+      const n = selectedNodes.size;
+      summary.innerHTML = n === 0
+        ? 'No components selected'
+        : `<strong>${n}</strong> component${n !== 1 ? 's' : ''} selected`;
+      btn.textContent = 'Export';
+      btn.disabled = n === 0;
     }
-
-    exportBtn.disabled = count === 0;
   }
 
-  // ── Export ────────────────────────────────────────────────────────────────
-  document.getElementById('btn-export').addEventListener('click', () => {
-    const toExport = allComponents.filter(c => selected.has(c.nodeId));
-    parent.postMessage({
-      pluginMessage: { type: 'export', components: toExport }
-    }, '*');
+  // ── Footer button action ──────────────────────────────────────────────────
+  document.getElementById('btn-action').addEventListener('click', () => {
+    if (step === STEP.PAGES) {
+      startScan();
+    } else if (step === STEP.COMPONENTS) {
+      exportComponents();
+    }
   });
+
+  function startScan() {
+    step = STEP.SCANNING;
+    scanTotal = selectedPages.size;
+    scanDone = 0;
+    allComponents = [];
+    updateFooter();
+
+    parent.postMessage({
+      pluginMessage: {
+        type: 'scan',
+        pageIds: [...selectedPages],
+      }
+    }, '*');
+  }
+
+  function exportComponents() {
+    const toExport = allComponents.filter(c => selectedNodes.has(c.nodeId));
+    parent.postMessage({ pluginMessage: { type: 'export', components: toExport } }, '*');
+  }
 
   // ── Toast ─────────────────────────────────────────────────────────────────
   function showToast(message, type = '') {
@@ -744,27 +866,6 @@
     toast.className = `toast visible ${type}`;
     setTimeout(() => toast.classList.remove('visible'), 2500);
   }
-
-  // Handle messages from main.ts
-  window.addEventListener('message', (event) => {
-    const msg = event.data.pluginMessage;
-    if (!msg) return;
-
-    // Trigger file download
-    if (msg.type === 'download') {
-      const blob = new Blob([msg.json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = msg.filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    if (msg.type === 'export-done') {
-      showToast(`Exported ${msg.count} component${msg.count !== 1 ? 's' : ''}`, 'success');
-    }
-  });
 </script>
 </body>
 </html>

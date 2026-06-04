@@ -15,6 +15,11 @@ interface ComponentExport {
   properties: string[];
 }
 
+interface PageSummary {
+  id: string;
+  name: string;
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 /** Walk up the node tree to find the parent PAGE node. */
@@ -45,37 +50,29 @@ function buildUrl(fileKey: string, nodeId: string): string {
   return `https://www.figma.com/file/${fileKey}?node-id=${encodedId}`;
 }
 
-/** Get the file key from the current document URL (available via figma.fileKey). */
+/** Get the file key from the current document. */
 function getFileKey(): string {
   return figma.fileKey ?? 'unknown';
 }
 
-// ── Scan ───────────────────────────────────────────────────────────────────
-
-function scanComponents(): ComponentExport[] {
+/** Scan a single page and return its components. */
+function scanPage(page: PageNode): ComponentExport[] {
   const fileKey = getFileKey();
   const results: ComponentExport[] = [];
 
-  // Walk every page in the document
-  for (const page of figma.root.children) {
-    // Find all COMPONENT nodes on this page (not COMPONENT_SET — those are the
-    // variant containers; we want the individual variant components inside them,
-    // plus any standalone components)
-    const components = page.findAllWithCriteria({ types: ['COMPONENT'] });
+  const components = page.findAllWithCriteria({ types: ['COMPONENT'] });
 
-    for (const node of components) {
-      results.push({
-        nodeId: node.id,
-        figmaName: node.name,
-        group: getGroup(node.name),
-        page: page.name,
-        url: buildUrl(fileKey, node.id),
-        properties: getProperties(node),
-      });
-    }
+  for (const node of components) {
+    results.push({
+      nodeId: node.id,
+      figmaName: node.name,
+      group: getGroup(node.name),
+      page: page.name,
+      url: buildUrl(fileKey, node.id),
+      properties: getProperties(node),
+    });
   }
 
-  // Sort alphabetically by group then name
   results.sort((a, b) => {
     const groupCmp = a.group.localeCompare(b.group);
     return groupCmp !== 0 ? groupCmp : a.figmaName.localeCompare(b.figmaName);
@@ -84,14 +81,17 @@ function scanComponents(): ComponentExport[] {
   return results;
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
+// ── Init — send pages immediately, don't scan yet ─────────────────────────
 
 (async () => {
-  const components = scanComponents();
+  const pages: PageSummary[] = figma.root.children.map(p => ({
+    id: p.id,
+    name: p.name,
+  }));
 
   figma.ui.postMessage({
-    type: 'components',
-    components,
+    type: 'pages',
+    pages,
     meta: {
       fileKey: getFileKey(),
       fileName: figma.root.name,
@@ -107,12 +107,32 @@ function scanComponents(): ComponentExport[] {
 
 figma.ui.onmessage = async (msg) => {
 
+  // Scan: called when user clicks "Scan selected pages"
+  // Processes one page at a time and streams results back incrementally
+  if (msg.type === 'scan') {
+    const pageIds: string[] = msg.pageIds;
+
+    for (const pageId of pageIds) {
+      const page = figma.root.children.find(p => p.id === pageId);
+      if (!page) continue;
+
+      // Notify UI that this page is being scanned
+      figma.ui.postMessage({ type: 'scan-page-start', pageId, pageName: page.name });
+
+      const components = scanPage(page);
+
+      // Stream this page's results to the UI as soon as they're ready
+      figma.ui.postMessage({ type: 'scan-page-done', pageId, pageName: page.name, components });
+    }
+
+    figma.ui.postMessage({ type: 'scan-complete' });
+  }
+
   // Locate: scroll and zoom Figma's viewport to a specific component
   if (msg.type === 'locate') {
     const node = await figma.getNodeByIdAsync(msg.nodeId);
     if (!node) return;
 
-    // Switch to the correct page if the component lives elsewhere
     const page = getPage(node);
     if (page && figma.currentPage.id !== page.id) {
       await figma.setCurrentPageAsync(page);
@@ -121,8 +141,7 @@ figma.ui.onmessage = async (msg) => {
     figma.viewport.scrollAndZoomIntoView([node as SceneNode]);
   }
 
-  // Export: receive the selected component list from the UI, enrich with
-  // current timestamp and user, then send back as a downloadable JSON blob
+  // Export: receive selected components, enrich with metadata, trigger download
   if (msg.type === 'export') {
     const payload = {
       fileKey: getFileKey(),
