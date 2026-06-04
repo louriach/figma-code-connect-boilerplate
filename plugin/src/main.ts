@@ -1,4 +1,4 @@
-// ── Code Connect Export — main.ts ──────────────────────────────────────────
+// ── Code Connect Export - main.ts ──────────────────────────────────────────
 // Runs in Figma's plugin sandbox. Has full access to the Figma plugin API.
 // Communicates with ui.html via postMessage.
 
@@ -81,7 +81,7 @@ function scanPage(page: PageNode): ComponentExport[] {
   return results;
 }
 
-// ── Init — send pages immediately, don't scan yet ─────────────────────────
+// ── Init - send pages immediately, don't scan yet ─────────────────────────
 
 (async () => {
   const pages: PageSummary[] = figma.root.children.map(p => ({

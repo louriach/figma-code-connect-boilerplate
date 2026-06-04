@@ -1,4 +1,4 @@
-# Code Connect Export — Figma Plugin
+# Code Connect Export - Figma Plugin
 
 Scans a Figma file for main components, lets you pick which ones to connect, and exports a `figma-components.json` for the Claude skill to process.
 
@@ -19,7 +19,7 @@ npm run build   # compiles src/main.ts → src/main.js (required before loading 
 
 ### Loading in Figma
 
-The plugin runs locally as a development plugin — no Figma Community publishing required.
+The plugin runs locally as a development plugin - no Figma Community publishing required.
 
 1. In Figma, go to **Menu → Plugins → Development → Import plugin from manifest**
 2. Select `plugin/manifest.json`
@@ -42,15 +42,15 @@ plugin/
 ├── manifest.json       # Figma plugin manifest
 ├── package.json
 ├── src/
-│   ├── main.ts         # Plugin logic — runs in Figma's sandbox
-│   └── ui.html         # Plugin UI — checklist and export button
+│   ├── main.ts         # Plugin logic - runs in Figma's sandbox
+│   └── ui.html         # Plugin UI - checklist and export button
 └── README.md
 ```
 
 ## How the plugin works
 
 1. `main.ts` runs in Figma's plugin sandbox and has access to the Figma API
-2. On load, it traverses `figma.root` to find all `COMPONENT` nodes (main components only — not instances or component sets/variants)
+2. On load, it traverses `figma.root` to find all `COMPONENT` nodes (main components only - not instances or component sets/variants)
 3. Components are grouped by their `/`-separated name prefix
 4. The component list is sent to the UI via `figma.ui.postMessage`
 5. When the user clicks Export, the UI sends the selected components back to `main.ts`

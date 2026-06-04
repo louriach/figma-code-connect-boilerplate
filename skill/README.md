@@ -1,4 +1,4 @@
-# Code Connect — Claude Skill
+# Code Connect - Claude Skill
 
 Reads a `figma-components.json` export from the Figma plugin, matches components to your codebase, generates all `.figma.ts` stubs, and publishes them to Figma Dev Mode.
 
@@ -20,7 +20,7 @@ Once installed, say something like:
 
 1. Reads `figma-components.json` from the plugin export
 2. Scans your repo for component files
-3. Presents a matching review table — Figma name, inferred code component, confidence score
+3. Presents a matching review table - Figma name, inferred code component, confidence score
 4. User confirms, corrects, or skips each row
 5. Generates `.figma.ts` stub files for all confirmed matches
 6. Runs `npm run publish` to push snippets to Figma Dev Mode
@@ -30,7 +30,7 @@ Once installed, say something like:
 ## Requirements
 
 - Claude desktop app
-- Claude Code (recommended — enables fully hands-off terminal execution)
+- Claude Code (recommended - enables fully hands-off terminal execution)
 - Node.js
 - A codebase using React, Vue, SwiftUI, Jetpack Compose, or Angular
 - A Figma Organisation or Enterprise plan (required by Figma for Dev Mode)
@@ -45,4 +45,4 @@ Once installed, say something like:
 
 ## Editing the skill
 
-The skill logic lives entirely in `code-connect.skill` — no build step required. Open it in any text editor to modify the prompts or flow.
+The skill logic lives entirely in `code-connect.skill` - no build step required. Open it in any text editor to modify the prompts or flow.

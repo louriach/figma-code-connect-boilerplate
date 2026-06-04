@@ -2,12 +2,12 @@
 
 ## Goal
 
-Enable non-engineers (designers, PMs, design system owners) to set up Figma Code Connect across an entire component library — without writing code or contributing directly to a codebase.
+Enable non-engineers (designers, PMs, design system owners) to set up Figma Code Connect across an entire component library - without writing code or contributing directly to a codebase.
 
 The system splits into two parts that hand off via a JSON export file:
 
-1. **Figma Plugin** — scans the file, lets the user pick components, exports a manifest
-2. **Claude Skill** — reads the manifest, matches components to code, generates and publishes all `.figma.ts` files
+1. **Figma Plugin** - scans the file, lets the user pick components, exports a manifest
+2. **Claude Skill** - reads the manifest, matches components to code, generates and publishes all `.figma.ts` files
 
 ---
 
@@ -19,7 +19,7 @@ Replace the manual "copy each component URL" step with a single scan-and-select 
 ### User flow
 
 1. User opens the plugin inside their Figma file
-2. Plugin scans the file and lists every **main component** (not instances, not variants — just the top-level components)
+2. Plugin scans the file and lists every **main component** (not instances, not variants - just the top-level components)
 3. User sees a checklist of all components, grouped by Figma page or component group (the `/`-separated prefix)
 4. User checks the ones they want to connect, or uses "Select all"
 5. User clicks **Export** → plugin writes `figma-components.json` to a location they choose
@@ -89,7 +89,7 @@ Take the plugin export and do everything else: match components to code, confirm
 5. Skill generates all `.figma.ts` files for confirmed matches
 6. Skill runs `npm run publish` and confirms each component appears in Dev Mode ← **primary goal complete**
 7. Skill writes a `figma-connect.map.json` to persist the confirmed mappings
-8. Skill presents the **closing stage** — what happens next, maintenance ownership, optional repo push
+8. Skill presents the **closing stage** - what happens next, maintenance ownership, optional repo push
 
 ---
 
@@ -118,22 +118,22 @@ This is the core UX of the skill step. Claude presents every component as a row 
 | Score | Criteria |
 |---|---|
 | **High** | Leaf name matches a repo component exactly or near-exactly after normalization (case, spaces, punctuation) |
-| **Medium** | Semantic match inferred by Claude — naming convention differences, abbreviations, common design-to-code patterns |
+| **Medium** | Semantic match inferred by Claude - naming convention differences, abbreviations, common design-to-code patterns |
 | **Low** | No confident match found; user must supply the component name manually |
 
 ### Actions per row
 
-- **Confirm** — accept the match as-is, proceed to stub generation
-- **Edit** — inline text field to type the correct component name; Claude re-runs prop mapping against the corrected name
-- **Skip** — exclude this component from the current run (can return to it later)
+- **Confirm** - accept the match as-is, proceed to stub generation
+- **Edit** - inline text field to type the correct component name; Claude re-runs prop mapping against the corrected name
+- **Skip** - exclude this component from the current run (can return to it later)
 
 High-confidence rows default to confirmed; medium and low rows require explicit user action before proceeding.
 
 ### Bulk actions
 
-- "Confirm all high" — confirms every High row in one step
-- "Skip all low" — skips unmatched components for now
-- "Confirm all" — confirms everything including medium (power user shortcut)
+- "Confirm all high" - confirms every High row in one step
+- "Skip all low" - skips unmatched components for now
+- "Confirm all" - confirms everything including medium (power user shortcut)
 
 ---
 
@@ -224,7 +224,7 @@ Prop mapping follows the same pattern as the existing skill: Claude reads the Ty
 
 The one manual step is generating a Figma access token (a settings page in Figma, not a terminal step). The skill walks them through this once; after that it is stored in `.env` and never asked for again.
 
-> **Note on Claude Code vs. desktop app:** The "no terminal commands" promise requires Claude Code (agentic mode). If the user runs the skill via the Claude desktop app without Claude Code installed, the skill falls back to generating all files and providing a single command to copy and run — still significantly better than the one-component-at-a-time flow, but not fully hands-off.
+> **Note on Claude Code vs. desktop app:** The "no terminal commands" promise requires Claude Code (agentic mode). If the user runs the skill via the Claude desktop app without Claude Code installed, the skill falls back to generating all files and providing a single command to copy and run - still significantly better than the one-component-at-a-time flow, but not fully hands-off.
 
 ---
 
@@ -256,7 +256,7 @@ If the user wants to save the files back to the repo:
 1. Skill checks whether Git is installed
 2. If not → guides them through installing Git (step-by-step, platform-specific, no assumed knowledge)
 3. Skill commits the generated files and opens a pull request via `gh pr create`
-4. User shares the PR link with an engineer to merge — no write access required on the user's part
+4. User shares the PR link with an engineer to merge - no write access required on the user's part
 
 This stage is explicitly optional. Code Connect is already live in Dev Mode at this point; the repo push is about long-term maintainability, not immediate functionality.
 
@@ -285,19 +285,19 @@ Generated alongside the `.figma.ts` files at the end of every run. Written in pl
 | Form / Input / Text | TextInput | Medium (user confirmed) | ✓ Connected |
 | Navigation Bar | NavBar | Medium (user confirmed) | ✓ Connected |
 | Tooltip / Dark | TooltipDark | Low (user corrected) | ✓ Connected |
-| Overlay / Scrim | — | — | ✗ Skipped |
+| Overlay / Scrim | - | - | ✗ Skipped |
 
 ## What was skipped
 
 The following components were excluded during setup and are not yet connected:
 
-- **Overlay / Scrim** — no code match found, excluded by user
+- **Overlay / Scrim** - no code match found, excluded by user
 
 These can be connected in a future run by providing the matching component name.
 
 ## Files generated
 
-All `.figma.ts` files are in `/src/figma/`. Do not edit the node IDs or file keys — these are tied directly to Figma.
+All `.figma.ts` files are in `/src/figma/`. Do not edit the node IDs or file keys - these are tied directly to Figma.
 
 ## How to update a component
 
@@ -325,8 +325,8 @@ Re-run the Figma Code Connect plugin in Figma, export a new `figma-components.js
 
 | File | Purpose | Commit? |
 |---|---|---|
-| `figma-components.json` | Plugin export — source of truth for selected components | Optional |
-| `figma-connect.map.json` | Confirmed name mappings — speeds up future runs | Yes — share with team |
+| `figma-components.json` | Plugin export - source of truth for selected components | Optional |
+| `figma-connect.map.json` | Confirmed name mappings - speeds up future runs | Yes - share with team |
 | `*.figma.ts` | One per connected component | Yes |
 | `HANDOFF.md` | Plain-language summary for the engineer receiving the PR | Yes |
 | `.env` | Figma access token | No |
@@ -335,9 +335,9 @@ Re-run the Figma Code Connect plugin in Figma, export a new `figma-components.js
 
 ## Open questions
 
-1. **Plugin distribution** — Decided: local dev plugin only. Users clone the repo and load it via Figma's Development plugin import. Private org plugin is a future option for teams who want to share it without everyone cloning the repo.
-2. **Repo access from plugin** — the plugin cannot read the codebase directly; the skill handles all repo work. Is the file-handoff (JSON export) sufficient, or do users want a live preview of the code match inside the plugin UI?
-3. **Variant handling** — multiple Figma components in the same group (e.g. `Button / Primary`, `Button / Secondary`) often map to a single code component with a `variant` prop. The skill should detect this pattern and generate one `.figma.ts` per code component, not one per Figma component. Needs explicit handling.
-4. **Framework detection** — the skill already detects the framework (React, Vue, etc.) from the repo. Should the plugin export include a framework hint, or leave detection entirely to the skill?
-5. **Token requirement** — publishing via the CLI requires a Figma access token. The skill handles this today. No change needed, but worth noting that the plugin step is token-free while the skill step is not.
-6. **Git installation** — the optional repo push stage requires Git. The skill guides installation, but this adds friction for users on managed/locked-down machines. May need a fallback (e.g. zip the generated files for manual handoff).
+1. **Plugin distribution** - Decided: local dev plugin only. Users clone the repo and load it via Figma's Development plugin import. Private org plugin is a future option for teams who want to share it without everyone cloning the repo.
+2. **Repo access from plugin** - the plugin cannot read the codebase directly; the skill handles all repo work. Is the file-handoff (JSON export) sufficient, or do users want a live preview of the code match inside the plugin UI?
+3. **Variant handling** - multiple Figma components in the same group (e.g. `Button / Primary`, `Button / Secondary`) often map to a single code component with a `variant` prop. The skill should detect this pattern and generate one `.figma.ts` per code component, not one per Figma component. Needs explicit handling.
+4. **Framework detection** - the skill already detects the framework (React, Vue, etc.) from the repo. Should the plugin export include a framework hint, or leave detection entirely to the skill?
+5. **Token requirement** - publishing via the CLI requires a Figma access token. The skill handles this today. No change needed, but worth noting that the plugin step is token-free while the skill step is not.
+6. **Git installation** - the optional repo push stage requires Git. The skill guides installation, but this adds friction for users on managed/locked-down machines. May need a fallback (e.g. zip the generated files for manual handoff).
