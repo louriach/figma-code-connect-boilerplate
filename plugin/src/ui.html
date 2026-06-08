@@ -749,6 +749,10 @@
         markPageScanning(msg.pageId);
         break;
 
+      case 'scan-log':
+        updatePageLog(msg.pageId, msg.message);
+        break;
+
       case 'scan-page-done':
         markPageDone(msg.pageId, msg.components.length);
         allComponents = allComponents.concat(msg.components);
@@ -895,7 +899,12 @@
 
   function markPageScanning(pageId) {
     const el = document.getElementById(`page-status-${pageId}`);
-    if (el) el.innerHTML = `<div class="page-scanning"><div class="spinner"></div> Scanning...</div>`;
+    if (el) el.innerHTML = `<div class="page-scanning"><div class="spinner"></div> <span id="page-log-${pageId}">Scanning...</span></div>`;
+  }
+
+  function updatePageLog(pageId, message) {
+    const el = document.getElementById(`page-log-${pageId}`);
+    if (el) el.textContent = message;
   }
 
   function markPageDone(pageId, count) {

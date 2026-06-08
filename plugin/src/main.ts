@@ -79,13 +79,20 @@ function getFileKey(): string {
  *   - Standalone COMPONENTs (parent is not a COMPONENT_SET) -> include
  *   - Variant COMPONENTs   (parent IS a COMPONENT_SET) -> skip; covered by the set
  */
+function log(pageId: string, message: string): void {
+  figma.ui.postMessage({ type: 'scan-log', pageId, message });
+}
+
 function scanPage(page: PageNode): { components: ComponentExport[]; skipped: SkippedComponent[] } {
   const fileKey = getFileKey();
   const components: ComponentExport[] = [];
   const skipped: SkippedComponent[] = [];
 
-  // Collect component sets (grouped variants)
+  // Step 1: find all component sets
+  log(page.id, 'Finding component sets...');
   const componentSets = page.findAllWithCriteria({ types: ['COMPONENT_SET'] }) as ComponentSetNode[];
+  log(page.id, `Found ${componentSets.length} component set${componentSets.length !== 1 ? 's' : ''}, reading properties...`);
+
   for (const node of componentSets) {
     try {
       components.push({
@@ -105,10 +112,13 @@ function scanPage(page: PageNode): { components: ComponentExport[]; skipped: Ski
     }
   }
 
-  // Collect standalone components (not children of a component set)
+  // Step 2: find standalone components
+  log(page.id, `Finding standalone components...`);
   const allComponents = page.findAllWithCriteria({ types: ['COMPONENT'] }) as ComponentNode[];
-  for (const node of allComponents) {
-    if (node.parent?.type === 'COMPONENT_SET') continue; // variant - skip
+  const standalone = allComponents.filter(n => n.parent?.type !== 'COMPONENT_SET');
+  log(page.id, `Found ${standalone.length} standalone component${standalone.length !== 1 ? 's' : ''}...`);
+
+  for (const node of standalone) {
     try {
       components.push({
         nodeId: node.id,
@@ -127,6 +137,7 @@ function scanPage(page: PageNode): { components: ComponentExport[]; skipped: Ski
     }
   }
 
+  log(page.id, `Sorting ${components.length} components...`);
   components.sort((a, b) => {
     const groupCmp = a.group.localeCompare(b.group);
     return groupCmp !== 0 ? groupCmp : a.figmaName.localeCompare(b.figmaName);
