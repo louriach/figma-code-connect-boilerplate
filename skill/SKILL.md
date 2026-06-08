@@ -1,5 +1,5 @@
 ---
-name: code-connect-export
+name: Figma Code Connect Boilerplate
 description: Connects a Figma component library to a codebase using Code Connect. Use this skill when someone has a figma-components.json export from the Code Connect Export plugin, or wants to match Figma components to their codebase, generate .figma.ts stub files, or publish Code Connect snippets to Figma Dev Mode. Works in both Claude Code (fully automated) and the Claude desktop app (assisted mode).
 ---
 
