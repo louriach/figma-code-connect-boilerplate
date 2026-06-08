@@ -214,7 +214,23 @@ Read the pasted JSON. Confirm what was found:
 
 Got it. I can see **[X] components** across **[N] pages** from **[fileName]**.
 
-Now I need to know a little about your codebase so I can generate the right files. **What framework is your project using?**
+Now I need a list of your actual component names so I can match them accurately. Run this command in your terminal from your project root and paste the output here:
+
+```
+ls src/components
+```
+
+If your components live somewhere else (e.g. `src/ui`, `components/`, `lib/`), use that path instead.
+
+**Paste the output here.** If you're not sure where your components are, just paste the contents of your `package.json` and I'll work it out.
+
+---
+
+Read the pasted output to get the real component names. Then ask:
+
+---
+
+Got it. One more thing — **what framework is your project using?**
 
 - React (TypeScript or JavaScript)
 - Vue
@@ -227,7 +243,7 @@ Now I need to know a little about your codebase so I can generate the right file
 
 ---
 
-In assisted mode, you cannot scan the codebase directly. You will match components using semantic inference from the Figma names alone. Where confidence is low, ask the user for the correct component name. Proceed to Step 3.
+Now proceed to Step 3. In assisted mode, confidence scoring is based on matching Figma names against the real component names the user just provided — not against a scanned codebase. High = name matches exactly after normalisation. Medium = semantic inference matched to a name in the list. Low = no match found in the provided list.
 
 ---
 
@@ -243,12 +259,13 @@ I'm now matching each Figma component to its code counterpart. This may take a m
 
 ---
 
-*(In Claude Code mode: scan the codebase. In assisted mode: use semantic inference from Figma names only.)*
-
 For each component in the export, attempt to find the matching code component:
 
 **3a - Normalisation**
 Strip Figma group prefixes (`Button / Primary` → `Button`), remove spaces, normalise case. Check for an exact or case-insensitive match.
+
+- **Claude Code mode**: match against files found by scanning the codebase directory
+- **Assisted mode**: match against the component names provided by the user in Step 2
 
 **3b - Semantic inference**
 If no exact match, use design-to-code naming heuristics:
@@ -257,9 +274,11 @@ If no exact match, use design-to-code naming heuristics:
 - `Icon / Arrow Right` → `ArrowRightIcon`
 
 **3c - Confidence scoring**
-- **High**: exact or near-exact match after normalisation
-- **Medium**: semantic match inferred from naming patterns
-- **Low**: no confident match found
+Confidence reflects how closely the Figma name matched a *real* component name — either from the scanned codebase (Claude Code) or from the list the user provided (assisted). Never assign High or Medium confidence unless there is an actual name to match against.
+
+- **High**: exact or near-exact match to a real component name
+- **Medium**: semantic inference matched to a real component name in the list
+- **Low**: no match found — user must provide the correct name or skip
 
 **3d - Present the matching review table**
 
