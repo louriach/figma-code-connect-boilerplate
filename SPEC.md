@@ -2,40 +2,71 @@
 
 ## Goal
 
-Enable non-engineers (designers, PMs, design system owners) to set up Figma Code Connect across an entire component library - without writing code or contributing directly to a codebase.
+Enable non-engineers (designers, PMs, design system owners) to set up Figma Code Connect across an entire component library — without writing code or contributing directly to a codebase.
 
 The system splits into two parts that hand off via a JSON export file:
 
-1. **Figma Plugin** - scans the file, lets the user pick components, exports a manifest
-2. **Claude Skill** - reads the manifest, matches components to code, generates and publishes all `.figma.ts` files
+1. **Figma Plugin** — scans the file, exports a structured component manifest
+2. **Claude Skill** — reads the manifest, matches components to code, generates and publishes all `.figma.ts` files
 
 ---
 
 ## Part 1: Figma Plugin
 
 ### Purpose
-Replace the manual "copy each component URL" step with a single scan-and-select workflow inside Figma.
 
-### User flow
+Replace the manual "copy each component URL" step with a single scan-and-export workflow inside Figma.
 
-1. User opens the plugin inside their Figma file
-2. Plugin scans the file and lists every **main component** (not instances, not variants - just the top-level components)
-3. User sees a checklist of all components, grouped by Figma page or component group (the `/`-separated prefix)
-4. User checks the ones they want to connect, or uses "Select all"
-5. User clicks **Export** → plugin writes `figma-components.json` to a location they choose
+### Plugin UI
 
-### Component checklist UI
+The plugin uses a persistent four-tab interface that is always visible at the top of the window. There is no onboarding gate — all tabs are accessible from the moment the plugin opens.
 
-| # | Component (Figma name) | Group | Node ID |
-|---|---|---|---|
-| ☑ | Button / Primary | Button | 1:23 |
-| ☑ | Button / Secondary | Button | 1:24 |
-| ☐ | Icon / Arrow Right | Icon | 2:10 |
+#### Home tab
 
-- Components are grouped by their `/`-prefix so the list stays manageable on large libraries
-- "Select all in group" toggle per group
-- Search/filter bar for large libraries
-- Shows total selected count before export
+A static reference screen. Shows the plugin logo, a short description, a numbered three-step explainer (Pick pages → Scan → Export), and a note about the Figma plan requirement for Dev Mode. Available any time as a reminder without interrupting the workflow.
+
+#### Pages tab
+
+A bordered, scrollable list of every page in the open Figma file. Controls:
+
+- **All / None** — in the box header, no extra dividers
+- **Page row** — checkbox + page name + live scan status (spinner with frame-level progress text while scanning, component count when done)
+- **Footer** — "[N] pages selected" summary + **Scan selected pages** button
+
+Scanning can be triggered multiple times per session. Each new scan resets the page status indicators and creates a new card in the Export tab.
+
+While scanning, the footer shows running progress ("Scanning 3 / 5 pages") and the button is disabled.
+
+#### Export tab
+
+Shows a card for every completed scan in the current session. Cards accumulate — scanning different page subsets produces multiple independent cards.
+
+**Card anatomy:**
+- Header: "Scan N" title + start time + duration (once complete)
+- Stats row: pages scanned / components found / skipped count (amber if non-zero)
+- Pages row: one pill per scanned page
+- Export button (disabled while in progress, active when complete)
+
+While a scan is running, a live in-progress card appears with a spinner and ticking counts. It becomes a full card when the scan finishes. The Export tab badge shows the number of completed scans.
+
+#### Log tab
+
+Lists every component that was skipped during scanning, with the page name and error reason. Badge count appears when there are issues. Empty state when all components scanned cleanly.
+
+### Scan architecture
+
+- Pages are listed immediately on load — no scan on open
+- Scanning is per-page and on-demand, triggered by the user
+- Within each page, scanning is frame-by-frame with event-loop yields between each top-level frame so log messages reach the UI in real time and slow or corrupt frames are identifiable by name
+- Leaf node types (`TEXT`, `RECTANGLE`, `ELLIPSE`, `VECTOR`, `INSTANCE`, etc.) are skipped before any traversal — they cannot contain components
+- A single `findAllWithCriteria({ types: ['COMPONENT_SET', 'COMPONENT'] })` call per frame retrieves both node types in one pass
+- Variant children (a `COMPONENT` whose parent is a `COMPONENT_SET`) are excluded — the set itself represents the full component
+
+### What the plugin does NOT do
+
+- It does not touch the codebase
+- It does not require a Figma access token (read-only plugin API)
+- It does not generate any `.figma.ts` files
 
 ### Export format (`figma-components.json`)
 
@@ -43,146 +74,136 @@ Replace the manual "copy each component URL" step with a single scan-and-select 
 {
   "fileKey": "abc123XYZ",
   "fileName": "Design System v2",
-  "exportedAt": "2026-06-03T10:00:00Z",
+  "exportedAt": "2026-06-08T10:00:00Z",
+  "exportedBy": {
+    "name": "Sarah Chen",
+    "id": "user:123"
+  },
   "components": [
     {
       "nodeId": "1:23",
-      "figmaName": "Button / Primary",
+      "figmaName": "Button",
       "group": "Button",
+      "page": "Components",
       "url": "https://www.figma.com/file/abc123XYZ?node-id=1%3A23",
-      "properties": ["variant", "size", "disabled", "label"]
+      "properties": [
+        { "name": "variant",  "type": "VARIANT", "values": ["Primary", "Secondary", "Tertiary"] },
+        { "name": "size",     "type": "VARIANT", "values": ["Small", "Medium", "Large"] },
+        { "name": "disabled", "type": "BOOLEAN" },
+        { "name": "label",    "type": "TEXT" }
+      ],
+      "variantNames": ["Button/Primary", "Button/Secondary", "Button/Tertiary"]
     },
     {
-      "nodeId": "1:24",
-      "figmaName": "Button / Secondary",
-      "group": "Button",
-      "url": "https://www.figma.com/file/abc123XYZ?node-id=1%3A24",
-      "properties": ["size", "disabled", "label"]
+      "nodeId": "4:88",
+      "figmaName": "TextInput",
+      "group": "Form",
+      "page": "Components",
+      "url": "https://www.figma.com/file/abc123XYZ?node-id=4%3A88",
+      "properties": [
+        { "name": "state",    "type": "VARIANT", "values": ["Default", "Focus", "Error", "Disabled"] },
+        { "name": "label",    "type": "TEXT" },
+        { "name": "helpText", "type": "TEXT" }
+      ]
     }
   ]
 }
 ```
 
-### What the plugin does NOT do
-- It does not touch the codebase
-- It does not require a Figma access token (read-only plugin API)
-- It does not generate any `.figma.ts` files
+**`properties`** — full definitions including type and, for `VARIANT` properties, every possible value. The skill uses these to emit precise `figma.enum()`, `figma.boolean()`, `figma.string()`, and `figma.instance()` calls without guessing.
+
+**`variantNames`** — present on `COMPONENT_SET` nodes only. Lists the Figma display names of every variant child so the skill knows multiple Figma names map to a single code component and should produce one `.figma.ts` file.
 
 ---
 
-## Part 2: Claude Skill (updated)
+## Part 2: Claude Skill
 
 ### Purpose
+
 Take the plugin export and do everything else: match components to code, confirm uncertain matches, generate stubs, publish.
 
 ### Trigger phrases
+
 - "Set up Code Connect using my Figma export"
 - "I have a figma-components.json, help me connect it"
 - "Connect my Figma library to my codebase"
 
-### User flow
+### Environment detection
 
-1. User provides the path to `figma-components.json` (or drags it in)
-2. Skill reads the file and scans the repo for components
-3. Skill presents the **matching review table** (see below)
-4. User confirms, corrects, or skips rows
-5. Skill generates all `.figma.ts` files for confirmed matches
-6. Skill runs `npm run publish` and confirms each component appears in Dev Mode ← **primary goal complete**
-7. Skill writes a `figma-connect.map.json` to persist the confirmed mappings
-8. Skill presents the **closing stage** - what happens next, maintenance ownership, optional repo push
+The skill detects its environment silently on launch by attempting a shell command.
+
+**Claude Code mode** — full filesystem and shell access. Reads files, writes stubs, runs `npm run publish`, creates PRs. No terminal interaction required from the user.
+
+**Assisted mode** — no filesystem or shell access (desktop app or web interface). The skill adapts every step: the user pastes content, Claude generates files as code blocks, and gives commands to copy/run. The matching table, confidence scoring, and HANDOFF.md work identically in both modes.
+
+### Skill flow
+
+#### Step 0 — Environment check (silent)
+Attempt `echo "ok"` via bash. Set mode to CLAUDE_CODE or ASSISTED. Open with the appropriate greeting.
+
+#### Step 1 — Plugin setup
+If the user has not run the plugin, walk through installation in three sub-steps: clone and build, import into Figma, run and export. Wait for explicit confirmation at each sub-step before continuing.
+
+#### Step 2 — Load the export
+- **Claude Code**: ask for the file path, read it, confirm what was found, ask for the codebase path, scan for framework
+- **Assisted**: ask for the JSON content pasted directly, confirm what was found, ask for `ls src/components` output to get real component names, ask for framework
+
+#### Step 3 — Component matching
+Match each Figma component to a code component:
+
+1. **Normalisation** — strip group prefixes, remove spaces, normalise case
+2. **Semantic inference** — apply design-to-code naming heuristics if no exact match
+3. **Confidence scoring** — must always reflect a match against a real component name; never assign High or Medium without one
+
+Present the full matching table and wait for user action before generating any files.
+
+Save confirmed mappings to `figma-connect.map.json`. Reused on future runs.
+
+#### Step 4 — Generate stub files
+Use property type data from the export:
+- `VARIANT` → `figma.enum()` with all variant values pre-populated
+- `BOOLEAN` → `figma.boolean()`
+- `TEXT` → `figma.string()`
+- `INSTANCE_SWAP` → `figma.instance()`
+
+Components sharing a code counterpart (identified via `variantNames`) produce one `.figma.ts` file.
+
+#### Step 5 — Publish
+Check config, ask for Figma token if needed (`figd_xxxxxxxx` format, stored in `.env`).
+- **Claude Code**: run `npm run publish`
+- **Assisted**: give copy/paste command, ask user to paste output
+
+#### Step 6 — Confirm and close
+Verify snippet appears in Dev Mode. Summarise, ask maintenance ownership question, generate `HANDOFF.md`, offer repo push.
 
 ---
 
 ## The Matching Review Table
 
-This is the core UX of the skill step. Claude presents every component as a row with its best guess at a code match and a confidence score.
-
-### Layout
-
 ```
-┌─────────────────────────────┬──────────────────┬────────────┬──────────────────────────────┐
-│ Figma Component             │ Code Match       │ Confidence │ Action                       │
-├─────────────────────────────┼──────────────────┼────────────┼──────────────────────────────┤
-│ Button / Primary            │ Button           │ ● High     │ ✓ Confirm  ✎ Edit  ✗ Skip   │
-│ Button / Secondary          │ Button           │ ● High     │ ✓ Confirm  ✎ Edit  ✗ Skip   │
-│ Form / Input / Text         │ TextInput        │ ◐ Medium   │ ✓ Confirm  ✎ Edit  ✗ Skip   │
-│ Navigation Bar              │ NavBar           │ ◐ Medium   │ ✓ Confirm  ✎ Edit  ✗ Skip   │
-│ Icon / Arrow Right          │ ArrowRightIcon   │ ◐ Medium   │ ✓ Confirm  ✎ Edit  ✗ Skip   │
-│ Tooltip / Dark              │ ?                │ ○ Low      │ [type component name]        │
-│ Overlay / Scrim             │ ?                │ ○ Low      │ [type component name]        │
-└─────────────────────────────┴──────────────────┴────────────┴──────────────────────────────┘
+Figma Component          Code Match        Confidence
+─────────────────────────────────────────────────────
+Button / Primary         Button            ● High
+Button / Secondary       Button            ● High
+Form / Input / Text      TextInput         ◐ Medium
+Navigation Bar           NavBar            ◐ Medium
+Tooltip / Dark           ?                 ○ Low
+Overlay / Scrim          ?                 ○ Low
 ```
 
-### Confidence tiers
-
-| Score | Criteria |
+| Confidence | Criteria |
 |---|---|
-| **High** | Leaf name matches a repo component exactly or near-exactly after normalization (case, spaces, punctuation) |
-| **Medium** | Semantic match inferred by Claude - naming convention differences, abbreviations, common design-to-code patterns |
-| **Low** | No confident match found; user must supply the component name manually |
+| **High** | Exact or near-exact match to a real component name after normalisation |
+| **Medium** | Semantic inference matched to a real component name |
+| **Low** | No match found — user must supply the name or skip |
 
-### Actions per row
-
-- **Confirm** - accept the match as-is, proceed to stub generation
-- **Edit** - inline text field to type the correct component name; Claude re-runs prop mapping against the corrected name
-- **Skip** - exclude this component from the current run (can return to it later)
-
-High-confidence rows default to confirmed; medium and low rows require explicit user action before proceeding.
-
-### Bulk actions
-
-- "Confirm all high" - confirms every High row in one step
-- "Skip all low" - skips unmatched components for now
-- "Confirm all" - confirms everything including medium (power user shortcut)
+Bulk actions: "Confirm all", "Confirm all high", "Skip all low"
 
 ---
 
-## Naming convention handling
+## Stub generation example (`Button.figma.ts`)
 
-The skill uses a layered approach to resolve Figma-to-code name mismatches:
-
-### Step 1: Normalisation
-Strip Figma group prefixes (`Button / Primary` → `Button`), remove spaces, normalize case. Check for an exact or case-insensitive match in the repo.
-
-### Step 2: Claude semantic inference
-If no exact match, Claude compares the Figma name against all exported component names in the repo and picks the most likely match using design-to-code naming heuristics:
-- `Form / Input / Text` → `TextInput`
-- `Navigation Bar` → `NavBar` or `Navbar`
-- `Icon / Arrow Right` → `ArrowRightIcon`
-
-### Step 3: Persist confirmed mappings
-Once the user confirms or corrects a match, it is written to `figma-connect.map.json`:
-
-```json
-{
-  "mappings": [
-    {
-      "figmaName": "Button / Primary",
-      "codeComponent": "Button",
-      "nodeId": "1:23",
-      "confirmedAt": "2026-06-03T10:15:00Z",
-      "confirmedBy": "manual"
-    },
-    {
-      "figmaName": "Form / Input / Text",
-      "codeComponent": "TextInput",
-      "nodeId": "3:55",
-      "confirmedAt": "2026-06-03T10:16:00Z",
-      "confirmedBy": "user-corrected"
-    }
-  ]
-}
-```
-
-On future runs, the skill checks this file first and skips the inference step for already-mapped components. The mapping file can be committed to the repo so the whole team benefits.
-
----
-
-## Stub generation
-
-For each confirmed match, the skill generates a `.figma.ts` file using the component's Figma properties mapped to its TypeScript props.
-
-### Example output (`Button.figma.ts`)
+Because the export includes property types and all variant values, the skill emits complete stubs without reading the component source or guessing at types:
 
 ```ts
 import figma from "@figma/code-connect";
@@ -193,6 +214,7 @@ figma.connect(Button, "https://www.figma.com/file/abc123XYZ?node-id=1%3A23", {
     variant: figma.enum("variant", {
       Primary: "primary",
       Secondary: "secondary",
+      Tertiary: "tertiary",
     }),
     size: figma.enum("size", {
       Small: "sm",
@@ -210,114 +232,84 @@ figma.connect(Button, "https://www.figma.com/file/abc123XYZ?node-id=1%3A23", {
 });
 ```
 
-Prop mapping follows the same pattern as the existing skill: Claude reads the TypeScript interface for the matched component and aligns Figma property names to prop names and types.
-
 ---
 
-## What the user never has to do
+## Naming convention handling
 
-- Copy any Figma URLs manually
-- Write any TypeScript
-- Run any terminal commands (Claude Code handles all CLI steps)
-- Know what a node ID is
-- Understand the Code Connect file format
+### Step 1: Normalisation
+Strip Figma group prefixes (`Button / Primary` → `Button`), remove spaces, normalise case. Check for exact or case-insensitive match.
 
-The one manual step is generating a Figma access token (a settings page in Figma, not a terminal step). The skill walks them through this once; after that it is stored in `.env` and never asked for again.
+### Step 2: Semantic inference
+If no exact match, compare against real component names using design-to-code heuristics:
+- `Form / Input / Text` → `TextInput`
+- `Navigation Bar` → `NavBar` or `Navbar`
+- `Icon / Arrow Right` → `ArrowRightIcon`
 
-> **Note on Claude Code vs. desktop app:** The "no terminal commands" promise requires Claude Code (agentic mode). If the user runs the skill via the Claude desktop app without Claude Code installed, the skill falls back to generating all files and providing a single command to copy and run - still significantly better than the one-component-at-a-time flow, but not fully hands-off.
+### Step 3: Persist confirmed mappings
 
----
-
-## Closing stage
-
-After publishing, the skill does not simply end. It opens a short conversation about what comes next.
-
-### What you just did
-
-The skill summarises:
-- How many components are now live in Dev Mode
-- Where the generated `.figma.ts` files live locally
-- A link to the Figma file to verify snippets are appearing
-
-### Maintenance question
-
-The skill asks explicitly:
-
-> "If a component is renamed or its props change in the future, someone will need to update these files and republish. Who on your team will own that?"
-
-- **"I will"** → proceed to the optional repo push stage below
-- **"An engineer will"** → generate a `HANDOFF.md` (see below) and guide the user to share it
-- **"Not sure yet"** → generate the `HANDOFF.md` anyway and explain both paths
-
-### Optional: push to repository
-
-If the user wants to save the files back to the repo:
-
-1. Skill checks whether Git is installed
-2. If not → guides them through installing Git (step-by-step, platform-specific, no assumed knowledge)
-3. Skill commits the generated files and opens a pull request via `gh pr create`
-4. User shares the PR link with an engineer to merge - no write access required on the user's part
-
-This stage is explicitly optional. Code Connect is already live in Dev Mode at this point; the repo push is about long-term maintainability, not immediate functionality.
+```json
+{
+  "mappings": [
+    {
+      "figmaName": "Button",
+      "codeComponent": "Button",
+      "nodeId": "1:23",
+      "confirmedAt": "2026-06-08T10:15:00Z",
+      "confirmedBy": "auto"
+    },
+    {
+      "figmaName": "Form / Input / Text",
+      "codeComponent": "TextInput",
+      "nodeId": "3:55",
+      "confirmedAt": "2026-06-08T10:16:00Z",
+      "confirmedBy": "user-corrected"
+    }
+  ]
+}
+```
 
 ---
 
 ## HANDOFF.md
 
-Generated alongside the `.figma.ts` files at the end of every run. Written in plain language for the engineer receiving it.
-
-### Format
+Generated at the end of every run. Written in plain language for the receiving engineer.
 
 ```markdown
 # Code Connect Handoff
 
-**Generated:** 2026-06-03T10:45:00Z
+**Generated:** 2026-06-08T10:45:00Z
 **Figma file:** Design System v2
 **Figma URL:** https://www.figma.com/file/abc123XYZ
-**Run by:** Sarah Chen (sarah@company.com)
+**Run by:** Sarah Chen
 
 ## What was connected
 
 | Figma Component | Code Component | Confidence | Status |
 |---|---|---|---|
-| Button / Primary | Button | High | ✓ Connected |
-| Button / Secondary | Button | High | ✓ Connected |
-| Form / Input / Text | TextInput | Medium (user confirmed) | ✓ Connected |
-| Navigation Bar | NavBar | Medium (user confirmed) | ✓ Connected |
-| Tooltip / Dark | TooltipDark | Low (user corrected) | ✓ Connected |
-| Overlay / Scrim | - | - | ✗ Skipped |
+| Button | Button | High | Connected |
+| Form / Input / Text | TextInput | Medium (confirmed) | Connected |
+| Tooltip / Dark | TooltipDark | Low (corrected) | Connected |
+| Overlay / Scrim | — | — | Skipped |
 
-## What was skipped
+## Skipped components
 
-The following components were excluded during setup and are not yet connected:
-
-- **Overlay / Scrim** - no code match found, excluded by user
-
-These can be connected in a future run by providing the matching component name.
+- **Overlay / Scrim** — no code match found
 
 ## Files generated
 
-All `.figma.ts` files are in `/src/figma/`. Do not edit the node IDs or file keys - these are tied directly to Figma.
+All `.figma.ts` files are in `/src/figma/`. Do not edit node IDs or file keys directly.
 
 ## How to update a component
 
-If a component is renamed or its props change:
-
 1. Open the relevant `.figma.ts` file
 2. Update the prop mappings
-3. Run `npm run publish` to push the updated snippet to Figma Dev Mode
+3. Run `npm run publish`
 
 ## How to add more components
 
-Re-run the Figma Code Connect plugin in Figma, export a new `figma-components.json`, and run the skill again. Previously confirmed mappings are remembered in `figma-connect.map.json`.
+Re-run the plugin, export a new `figma-components.json`, and run the skill again.
+Previously confirmed mappings in `figma-connect.map.json` are reused automatically.
 ```
-
-### Why this file matters
-
-- Gives the receiving engineer full context without needing to ask the person who ran it
-- The timestamp and Figma URL make it a clear audit trail
-- The confidence column flags which mappings to scrutinise during PR review
-- The skipped components list ensures nothing is silently forgotten
 
 ---
 
@@ -325,19 +317,29 @@ Re-run the Figma Code Connect plugin in Figma, export a new `figma-components.js
 
 | File | Purpose | Commit? |
 |---|---|---|
-| `figma-components.json` | Plugin export - source of truth for selected components | Optional |
-| `figma-connect.map.json` | Confirmed name mappings - speeds up future runs | Yes - share with team |
-| `*.figma.ts` | One per connected component | Yes |
-| `HANDOFF.md` | Plain-language summary for the engineer receiving the PR | Yes |
-| `.env` | Figma access token | No |
+| `figma-components.json` | Plugin export | Optional |
+| `figma-connect.map.json` | Confirmed name mappings — reused on future runs | Yes |
+| `*.figma.ts` | One per connected code component | Yes |
+| `HANDOFF.md` | Plain-language summary for the receiving engineer | Yes |
+| `.env` | Figma access token | No — never commit |
+
+---
+
+## What the user never has to do
+
+- Copy any Figma URLs manually
+- Write any TypeScript
+- Know what a node ID is
+- Understand the Code Connect file format
+- Run terminal commands (Claude Code handles this; assisted mode gives copy/paste commands)
+
+The one unavoidable manual step is generating a Figma access token. The skill walks through this once; after that it is stored in `.env` and never asked for again.
 
 ---
 
 ## Open questions
 
-1. **Plugin distribution** - Decided: local dev plugin only. Users clone the repo and load it via Figma's Development plugin import. Private org plugin is a future option for teams who want to share it without everyone cloning the repo.
-2. **Repo access from plugin** - the plugin cannot read the codebase directly; the skill handles all repo work. Is the file-handoff (JSON export) sufficient, or do users want a live preview of the code match inside the plugin UI?
-3. **Variant handling** - multiple Figma components in the same group (e.g. `Button / Primary`, `Button / Secondary`) often map to a single code component with a `variant` prop. The skill should detect this pattern and generate one `.figma.ts` per code component, not one per Figma component. Needs explicit handling.
-4. **Framework detection** - the skill already detects the framework (React, Vue, etc.) from the repo. Should the plugin export include a framework hint, or leave detection entirely to the skill?
-5. **Token requirement** - publishing via the CLI requires a Figma access token. The skill handles this today. No change needed, but worth noting that the plugin step is token-free while the skill step is not.
-6. **Git installation** - the optional repo push stage requires Git. The skill guides installation, but this adds friction for users on managed/locked-down machines. May need a fallback (e.g. zip the generated files for manual handoff).
+1. **Plugin distribution** — Currently local dev plugin only. Private org plugin is a future option.
+2. **Live preview in plugin** — Should the plugin show a preview of the code match, or leave that to the skill?
+3. **Token requirement** — Publishing requires a Figma access token. The plugin step is token-free; only the skill's publish step needs one.
+4. **Git on managed machines** — The optional repo push requires Git. Fallback: zip the generated files for manual handoff.

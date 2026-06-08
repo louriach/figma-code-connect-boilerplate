@@ -6,13 +6,20 @@ figma.showUI(__html__, { width: 360, height: 520, themeColors: false });
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+interface ComponentProperty {
+  name: string;
+  type: 'VARIANT' | 'BOOLEAN' | 'TEXT' | 'INSTANCE_SWAP';
+  values?: string[]; // possible values — VARIANT properties only
+}
+
 interface ComponentExport {
   nodeId: string;
   figmaName: string;
   group: string;
   page: string;
   url: string;
-  properties: string[];
+  properties: ComponentProperty[];
+  variantNames?: string[]; // child variant names for COMPONENT_SET nodes
 }
 
 interface SkippedComponent {
@@ -44,14 +51,21 @@ function getGroup(name: string): string {
   return parts.length > 1 ? parts[0].trim() : 'Ungrouped';
 }
 
-/** Extract property names from a component or component set node.
- *  Wrapped in try/catch because component sets with broken references
- *  (missing styles, detached instances) throw on property access.
+/**
+ * Extract full property definitions: name, type, and variant values.
+ * Returns [] for nodes with broken references rather than throwing.
  */
-function getProperties(node: ComponentNode | ComponentSetNode): string[] {
+function getProperties(node: ComponentNode | ComponentSetNode): ComponentProperty[] {
   try {
     if (!node.componentPropertyDefinitions) return [];
-    return Object.keys(node.componentPropertyDefinitions);
+    return Object.entries(node.componentPropertyDefinitions).map(([name, def]) => {
+      const prop: ComponentProperty = { name, type: def.type };
+      // variantOptions is only present on VARIANT-type definitions
+      if (def.type === 'VARIANT') {
+        prop.values = def.variantOptions;
+      }
+      return prop;
+    });
   } catch {
     return [];
   }
@@ -78,14 +92,25 @@ function yield_(): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, 0));
 }
 
-/** Scan a single page frame-by-frame, yielding between each top-level
- *  child so the UI stays responsive and log messages arrive in real time.
+// Node types that can structurally contain components.
+// Anything not in this set is a leaf and can be skipped entirely.
+const CONTAINER_TYPES = new Set([
+  'FRAME', 'GROUP', 'SECTION', 'COMPONENT', 'COMPONENT_SET',
+]);
+
+/**
+ * Scan a page frame-by-frame, yielding between each top-level child so
+ * log messages reach the UI in real time and slow frames are identifiable.
  *
- *  findAllWithCriteria on the whole page blocks the sandbox thread for as
- *  long as it takes — on a large page that can be many seconds with no
- *  feedback. Scanning each top-level frame individually with a yield
- *  between them means the UI receives log updates after each frame and the
- *  user can see exactly which frame is slow.
+ * Optimisations vs. a naive implementation:
+ *   1. Leaf nodes (TEXT, RECTANGLE, VECTOR, etc.) are skipped before any
+ *      tree traversal — they structurally cannot contain components.
+ *   2. A single findAllWithCriteria call per frame retrieves both
+ *      COMPONENT_SET and COMPONENT nodes in one pass instead of two.
+ *   3. Variant children (COMPONENT inside a COMPONENT_SET) are excluded
+ *      after the fact — the set itself represents the whole component.
+ *   4. COMPONENT_SET nodes include their variant child names so the skill
+ *      knows which Figma names map to a single code component.
  */
 async function scanPage(page: PageNode): Promise<{ components: ComponentExport[]; skipped: SkippedComponent[] }> {
   const fileKey = getFileKey();
@@ -95,55 +120,46 @@ async function scanPage(page: PageNode): Promise<{ components: ComponentExport[]
 
   for (let i = 0; i < topLevel.length; i++) {
     const child = topLevel[i];
+
+    // Skip leaves — TEXT, RECTANGLE, ELLIPSE, VECTOR, INSTANCE, etc.
+    if (!CONTAINER_TYPES.has(child.type)) continue;
+
     log(page.id, `[${i + 1}/${topLevel.length}] "${child.name}"`);
-    await yield_(); // flush log message to UI before blocking call
+    await yield_(); // flush log to UI before blocking call
 
-    // Component sets in this frame
-    let sets: ComponentSetNode[] = [];
-    if (child.type === 'COMPONENT_SET') {
-      sets = [child as ComponentSetNode];
-    } else if ('findAllWithCriteria' in child) {
-      sets = (child as ChildrenMixin).findAllWithCriteria({ types: ['COMPONENT_SET'] }) as ComponentSetNode[];
+    // Single traversal: collect COMPONENT_SET and COMPONENT in one pass
+    let found: SceneNode[];
+    if (child.type === 'COMPONENT_SET' || child.type === 'COMPONENT') {
+      found = [child as SceneNode];
+    } else {
+      found = (child as ChildrenMixin).findAllWithCriteria({
+        types: ['COMPONENT_SET', 'COMPONENT'],
+      }) as SceneNode[];
     }
 
-    for (const node of sets) {
+    for (const node of found) {
+      // Variant components (COMPONENT inside a COMPONENT_SET) are covered
+      // by the set itself — skip them to avoid duplicate entries.
+      if (node.type === 'COMPONENT' && node.parent?.type === 'COMPONENT_SET') continue;
+
       try {
-        components.push({
+        const entry: ComponentExport = {
           nodeId: node.id,
           figmaName: node.name,
           group: getGroup(node.name),
           page: page.name,
           url: buildUrl(fileKey, node.id),
-          properties: getProperties(node),
-        });
-      } catch (err) {
-        skipped.push({
-          figmaName: node.name,
-          page: page.name,
-          reason: err instanceof Error ? err.message : 'Unknown error',
-        });
-      }
-    }
+          properties: getProperties(node as ComponentNode | ComponentSetNode),
+        };
 
-    // Standalone components in this frame (not inside a component set)
-    let standalone: ComponentNode[] = [];
-    if (child.type === 'COMPONENT' && child.parent?.type !== 'COMPONENT_SET') {
-      standalone = [child as ComponentNode];
-    } else if ('findAllWithCriteria' in child) {
-      const all = (child as ChildrenMixin).findAllWithCriteria({ types: ['COMPONENT'] }) as ComponentNode[];
-      standalone = all.filter(n => n.parent?.type !== 'COMPONENT_SET');
-    }
+        // Include variant child names so the skill can map multiple Figma
+        // component names (e.g. Button/Primary, Button/Secondary) to one
+        // code component without generating duplicate .figma.ts files.
+        if (node.type === 'COMPONENT_SET') {
+          entry.variantNames = (node as ComponentSetNode).children.map(c => c.name);
+        }
 
-    for (const node of standalone) {
-      try {
-        components.push({
-          nodeId: node.id,
-          figmaName: node.name,
-          group: getGroup(node.name),
-          page: page.name,
-          url: buildUrl(fileKey, node.id),
-          properties: getProperties(node),
-        });
+        components.push(entry);
       } catch (err) {
         skipped.push({
           figmaName: node.name,
@@ -162,7 +178,7 @@ async function scanPage(page: PageNode): Promise<{ components: ComponentExport[]
   return { components, skipped };
 }
 
-// ── Init - send pages immediately, don't scan yet ─────────────────────────
+// ── Init — send pages immediately, don't scan yet ─────────────────────────
 
 (async () => {
   const pages: PageSummary[] = figma.root.children.map(p => ({
@@ -188,8 +204,7 @@ async function scanPage(page: PageNode): Promise<{ components: ComponentExport[]
 
 figma.ui.onmessage = async (msg) => {
 
-  // Scan: called when user clicks "Scan selected pages"
-  // Processes one page at a time and streams results back incrementally
+  // Scan: processes one page at a time and streams results back incrementally
   if (msg.type === 'scan') {
     const pageIds: string[] = msg.pageIds;
 
@@ -197,12 +212,8 @@ figma.ui.onmessage = async (msg) => {
       const page = figma.root.children.find(p => p.id === pageId);
       if (!page) continue;
 
-      // Notify UI that this page is being scanned
       figma.ui.postMessage({ type: 'scan-page-start', pageId, pageName: page.name });
-
       const { components, skipped } = await scanPage(page);
-
-      // Stream this page's results to the UI as soon as they're ready
       figma.ui.postMessage({ type: 'scan-page-done', pageId, pageName: page.name, components, skipped });
     }
 
@@ -222,7 +233,7 @@ figma.ui.onmessage = async (msg) => {
     figma.viewport.scrollAndZoomIntoView([node as SceneNode]);
   }
 
-  // Export: receive selected components, enrich with metadata, trigger download
+  // Export: enrich selected components with metadata and trigger download
   if (msg.type === 'export') {
     const payload = {
       fileKey: getFileKey(),
