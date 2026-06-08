@@ -15,6 +15,12 @@ interface ComponentExport {
   properties: string[];
 }
 
+interface SkippedComponent {
+  figmaName: string;
+  page: string;
+  reason: string;
+}
+
 interface PageSummary {
   id: string;
   name: string;
@@ -62,7 +68,7 @@ function getFileKey(): string {
   return figma.fileKey ?? 'unknown';
 }
 
-/** Scan a single page and return its components.
+/** Scan a single page and return its components plus any skipped nodes.
  *
  * Figma has three relevant node types:
  *   COMPONENT_SET  - the container for a set of variants (e.g. "Button")
@@ -73,15 +79,16 @@ function getFileKey(): string {
  *   - Standalone COMPONENTs (parent is not a COMPONENT_SET) -> include
  *   - Variant COMPONENTs   (parent IS a COMPONENT_SET) -> skip; covered by the set
  */
-function scanPage(page: PageNode): ComponentExport[] {
+function scanPage(page: PageNode): { components: ComponentExport[]; skipped: SkippedComponent[] } {
   const fileKey = getFileKey();
-  const results: ComponentExport[] = [];
+  const components: ComponentExport[] = [];
+  const skipped: SkippedComponent[] = [];
 
   // Collect component sets (grouped variants)
   const componentSets = page.findAllWithCriteria({ types: ['COMPONENT_SET'] }) as ComponentSetNode[];
   for (const node of componentSets) {
     try {
-      results.push({
+      components.push({
         nodeId: node.id,
         figmaName: node.name,
         group: getGroup(node.name),
@@ -89,17 +96,21 @@ function scanPage(page: PageNode): ComponentExport[] {
         url: buildUrl(fileKey, node.id),
         properties: getProperties(node),
       });
-    } catch {
-      // Skip component sets with unrecoverable errors (broken references, etc.)
+    } catch (err) {
+      skipped.push({
+        figmaName: node.name,
+        page: page.name,
+        reason: err instanceof Error ? err.message : 'Unknown error',
+      });
     }
   }
 
   // Collect standalone components (not children of a component set)
-  const components = page.findAllWithCriteria({ types: ['COMPONENT'] }) as ComponentNode[];
-  for (const node of components) {
+  const allComponents = page.findAllWithCriteria({ types: ['COMPONENT'] }) as ComponentNode[];
+  for (const node of allComponents) {
     if (node.parent?.type === 'COMPONENT_SET') continue; // variant - skip
     try {
-      results.push({
+      components.push({
         nodeId: node.id,
         figmaName: node.name,
         group: getGroup(node.name),
@@ -107,17 +118,21 @@ function scanPage(page: PageNode): ComponentExport[] {
         url: buildUrl(fileKey, node.id),
         properties: getProperties(node),
       });
-    } catch {
-      // Skip components with unrecoverable errors
+    } catch (err) {
+      skipped.push({
+        figmaName: node.name,
+        page: page.name,
+        reason: err instanceof Error ? err.message : 'Unknown error',
+      });
     }
   }
 
-  results.sort((a, b) => {
+  components.sort((a, b) => {
     const groupCmp = a.group.localeCompare(b.group);
     return groupCmp !== 0 ? groupCmp : a.figmaName.localeCompare(b.figmaName);
   });
 
-  return results;
+  return { components, skipped };
 }
 
 // ── Init - send pages immediately, don't scan yet ─────────────────────────
@@ -158,10 +173,10 @@ figma.ui.onmessage = async (msg) => {
       // Notify UI that this page is being scanned
       figma.ui.postMessage({ type: 'scan-page-start', pageId, pageName: page.name });
 
-      const components = scanPage(page);
+      const { components, skipped } = scanPage(page);
 
       // Stream this page's results to the UI as soon as they're ready
-      figma.ui.postMessage({ type: 'scan-page-done', pageId, pageName: page.name, components });
+      figma.ui.postMessage({ type: 'scan-page-done', pageId, pageName: page.name, components, skipped });
     }
 
     figma.ui.postMessage({ type: 'scan-complete' });

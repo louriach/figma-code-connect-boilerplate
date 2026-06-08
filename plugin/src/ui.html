@@ -20,10 +20,14 @@
       --accent-dim:   rgba(168, 213, 181, 0.12);
       --accent-hover: rgba(168, 213, 181, 0.2);
 
+      --warn:         #e8a87c;
+      --warn-dim:     rgba(232, 168, 124, 0.12);
+
       --text-primary:   #f0f0f0;
-      --text-secondary: #a8a8a8;  /* 5.9:1 on #1a1a1a, 4.9:1 on #2a2a2a - AA ✓ */
-      --text-tertiary:  #909090;  /* 5.4:1 on #1a1a1a, 4.5:1 on #2a2a2a - AA ✓ */
+      --text-secondary: #a8a8a8;
+      --text-tertiary:  #909090;
       --text-accent:    #a8d5b5;
+      --text-warn:      #e8a87c;
 
       --font: 'Inter', system-ui, -apple-system, sans-serif;
       --size-base: 13px;
@@ -68,10 +72,20 @@
       font-size: var(--size-sm);
       color: var(--text-secondary);
       margin-top: 2px;
-      transition: opacity 0.2s;
     }
 
-    /* ── Toolbar (components step only) ── */
+    /* ── Pages toolbar (select all / none) ── */
+    .pages-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      padding: 6px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── Component toolbar ── */
     .toolbar {
       display: flex;
       align-items: center;
@@ -121,6 +135,43 @@
       flex-shrink: 0;
     }
 
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 16px;
+      font-size: var(--size-sm);
+      font-weight: 500;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: var(--font);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab:hover { color: var(--text-primary); }
+    .tab.active { color: var(--text-primary); border-bottom-color: var(--accent); }
+
+    .tab-badge {
+      font-size: var(--size-xs);
+      background: var(--warn-dim);
+      color: var(--text-warn);
+      border-radius: 10px;
+      padding: 0 5px;
+      line-height: 16px;
+    }
+
     /* ── Scrollable body ── */
     .list {
       flex: 1;
@@ -132,7 +183,7 @@
     .list::-webkit-scrollbar-track { background: transparent; }
     .list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    /* ── Page rows (step 1) ── */
+    /* ── Page rows ── */
     .page-row {
       display: flex;
       align-items: center;
@@ -144,8 +195,6 @@
     }
 
     .page-row:hover { background: var(--surface-alt); }
-    .page-row.checked { background: var(--accent-dim); }
-    .page-row.checked:hover { background: var(--accent-hover); }
 
     .page-name {
       font-size: var(--size-base);
@@ -166,7 +215,7 @@
       color: var(--text-accent);
     }
 
-    /* ── Component groups (step 2) ── */
+    /* ── Component groups ── */
     .group { margin-bottom: 2px; }
 
     .group-header {
@@ -206,7 +255,6 @@
     }
 
     .group-count .selected-count { color: var(--text-accent); }
-
     .group-items.collapsed { display: none; }
 
     /* ── Component row ── */
@@ -280,21 +328,48 @@
     .btn-locate:hover { color: var(--text-accent); background: var(--accent-dim); }
     .btn-locate svg { width: 13px; height: 13px; }
 
-    /* ── Scanning progress row (appears inline in list during scan) ── */
-    .scan-progress-row {
+    /* ── Log tab rows ── */
+    .log-row {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      gap: 2px;
       padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .log-row:last-child { border-bottom: none; }
+
+    .log-name {
+      font-size: var(--size-base);
+      color: var(--text-primary);
+    }
+
+    .log-detail {
+      font-size: var(--size-xs);
+      color: var(--text-warn);
+    }
+
+    .log-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 6px;
+      color: var(--text-tertiary);
       font-size: var(--size-sm);
-      color: var(--text-secondary);
+      padding: 32px 24px;
+      text-align: center;
     }
 
     /* ── Custom checkbox ── */
     .checkbox-wrap {
+      position: relative;
       display: flex;
       align-items: center;
       flex-shrink: 0;
+      width: 14px;
+      height: 14px;
     }
 
     .checkbox-wrap input[type="checkbox"] {
@@ -308,6 +383,7 @@
       position: relative;
       transition: border-color 0.15s, background 0.15s;
       flex-shrink: 0;
+      margin: 0;
     }
 
     .checkbox-wrap input[type="checkbox"]:checked {
@@ -320,16 +396,22 @@
       border-color: var(--accent);
     }
 
-    .checkbox-wrap input[type="checkbox"]:checked::after {
-      content: '';
+    /* SVG check icon overlay */
+    .cb-icon {
       position: absolute;
-      left: 3px; top: 1px;
-      width: 6px; height: 9px;
-      border: 1.5px solid var(--bg);
-      border-top: none; border-left: none;
-      transform: rotate(45deg) scaleY(0.85);
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      color: #1a1a1a;
     }
 
+    .cb-icon svg { width: 9px; height: 9px; display: none; }
+
+    .checkbox-wrap input:checked  ~ .cb-icon svg.cb-check { display: block; }
+
+    /* Indeterminate dash stays as CSS - no SVG needed */
     .checkbox-wrap input[type="checkbox"]:indeterminate::after {
       content: '';
       position: absolute;
@@ -351,7 +433,7 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Empty / idle states ── */
+    /* ── Empty state ── */
     .empty {
       display: flex;
       flex-direction: column;
@@ -429,7 +511,6 @@
       flex-direction: column;
       flex: 1;
       padding: 24px 20px 20px;
-      gap: 0;
       overflow-y: auto;
     }
 
@@ -446,11 +527,7 @@
       flex-shrink: 0;
     }
 
-    .welcome-logo svg {
-      width: 16px;
-      height: 16px;
-      color: var(--accent);
-    }
+    .welcome-logo svg { width: 16px; height: 16px; color: var(--accent); }
 
     .welcome-heading {
       font-size: 15px;
@@ -471,7 +548,6 @@
     .welcome-steps {
       display: flex;
       flex-direction: column;
-      gap: 0;
       margin-bottom: 24px;
     }
 
@@ -480,12 +556,9 @@
       gap: 12px;
       padding: 10px 0;
       border-bottom: 1px solid var(--border);
-      position: relative;
     }
 
-    .welcome-step:last-child {
-      border-bottom: none;
-    }
+    .welcome-step:last-child { border-bottom: none; }
 
     .step-number {
       width: 20px;
@@ -502,8 +575,6 @@
       flex-shrink: 0;
       margin-top: 1px;
     }
-
-    .step-content {}
 
     .step-title {
       font-size: var(--size-sm);
@@ -523,13 +594,9 @@
       margin-top: auto;
       padding-top: 16px;
       border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
     .welcome-note {
-      flex: 1;
       font-size: var(--size-xs);
       color: var(--text-tertiary);
       line-height: 1.5;
@@ -549,12 +616,28 @@
     <div class="header-subtitle" id="header-subtitle">Choose pages to scan</div>
   </div>
 
-  <!-- Toolbar: shown on component step only -->
+  <!-- Pages toolbar: select all / none (pages step only) -->
+  <div class="pages-toolbar hidden" id="pages-toolbar">
+    <button class="btn-text" id="btn-pages-all">Select all</button>
+    <div class="toolbar-divider"></div>
+    <button class="btn-text muted" id="btn-pages-none">None</button>
+  </div>
+
+  <!-- Component toolbar (component step only) -->
   <div class="toolbar hidden" id="toolbar">
-    <input class="search" type="text" placeholder="Filter components…" id="search" />
+    <input class="search" type="text" placeholder="Filter components..." id="search" />
     <button class="btn-text" id="btn-select-all">Select all</button>
     <div class="toolbar-divider"></div>
     <button class="btn-text muted" id="btn-deselect-all">Clear</button>
+  </div>
+
+  <!-- Tabs: Export / Log (component step only) -->
+  <div class="tabs hidden" id="tabs">
+    <button class="tab active" id="tab-export" data-tab="export">Export</button>
+    <button class="tab" id="tab-log" data-tab="log">
+      Log
+      <span class="tab-badge hidden" id="log-badge">0</span>
+    </button>
   </div>
 
   <!-- Welcome screen -->
@@ -602,12 +685,15 @@
     </div>
   </div>
 
-  <!-- Scrollable content (pages + components) -->
+  <!-- Scrollable content -->
   <div class="list hidden" id="list">
     <div class="empty" id="loading-pages">
       <div class="spinner" style="width:18px;height:18px;border-width:2px;"></div>
     </div>
   </div>
+
+  <!-- Log panel (hidden until tab-log is active) -->
+  <div class="list hidden" id="log-panel"></div>
 
   <!-- Footer -->
   <div class="footer">
@@ -620,13 +706,27 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  // ── Lucide SVG strings ────────────────────────────────────────────────────
+  const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+  const ICON_TARGET = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
+
+  // ── Checkbox helper ───────────────────────────────────────────────────────
+  function cbHTML(attrs) {
+    return `<div class="checkbox-wrap">
+      <input type="checkbox" ${attrs} />
+      <span class="cb-icon"><svg class="cb-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+    </div>`;
+  }
+
   // ── State ─────────────────────────────────────────────────────────────────
   const STEP = { WELCOME: 'welcome', PAGES: 'pages', SCANNING: 'scanning', COMPONENTS: 'components' };
   let step = STEP.WELCOME;
+  let activeTab = 'export';
 
-  let allPages = [];          // [{ id, name }]
+  let allPages = [];
   let selectedPages = new Set();
-  let allComponents = [];     // accumulated across scanned pages
+  let allComponents = [];
+  let skippedComponents = [];   // broken nodes reported by main.ts
   let selectedNodes = new Set();
   let collapsed = new Set();
   let scanTotal = 0;
@@ -642,7 +742,6 @@
       case 'pages':
         allPages = msg.pages;
         allPages.forEach(p => selectedPages.add(p.id));
-        // Pages are ready but we don't show them until the user clicks Get started
         updateFooter();
         break;
 
@@ -652,9 +751,12 @@
 
       case 'scan-page-done':
         markPageDone(msg.pageId, msg.components.length);
-        // Append incoming components and re-render the growing list
         allComponents = allComponents.concat(msg.components);
         msg.components.forEach(c => selectedNodes.add(c.nodeId));
+        if (msg.skipped && msg.skipped.length) {
+          skippedComponents = skippedComponents.concat(msg.skipped);
+          updateLogBadge();
+        }
         scanDone++;
         renderComponentsIncremental();
         updateFooter();
@@ -663,6 +765,7 @@
       case 'scan-complete':
         step = STEP.COMPONENTS;
         document.getElementById('toolbar').classList.remove('hidden');
+        document.getElementById('tabs').classList.remove('hidden');
         document.getElementById('header-subtitle').textContent =
           'Select components to connect to your codebase';
         updateFooter();
@@ -685,6 +788,57 @@
     }
   };
 
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (activeTab === 'export') {
+        document.getElementById('list').classList.remove('hidden');
+        document.getElementById('log-panel').classList.add('hidden');
+        document.getElementById('toolbar').classList.remove('hidden');
+      } else {
+        document.getElementById('list').classList.add('hidden');
+        document.getElementById('log-panel').classList.remove('hidden');
+        document.getElementById('toolbar').classList.add('hidden');
+        renderLog();
+      }
+    });
+  });
+
+  function updateLogBadge() {
+    const badge = document.getElementById('log-badge');
+    if (skippedComponents.length > 0) {
+      badge.textContent = skippedComponents.length;
+      badge.classList.remove('hidden');
+    }
+  }
+
+  function renderLog() {
+    const panel = document.getElementById('log-panel');
+    panel.innerHTML = '';
+
+    if (skippedComponents.length === 0) {
+      panel.innerHTML = `<div class="log-empty">
+        <div>No issues found</div>
+        <div style="color:var(--text-tertiary);font-size:var(--size-xs)">All components scanned successfully</div>
+      </div>`;
+      return;
+    }
+
+    skippedComponents.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'log-row';
+      row.innerHTML = `
+        <div class="log-name">${s.figmaName}</div>
+        <div class="log-detail">${s.page} - ${s.reason}</div>
+      `;
+      panel.appendChild(row);
+    });
+  }
+
   // ── Step 1: Page list ─────────────────────────────────────────────────────
   function renderPages() {
     const list = document.getElementById('list');
@@ -697,13 +851,10 @@
 
     allPages.forEach(page => {
       const row = document.createElement('div');
-      row.className = `page-row ${selectedPages.has(page.id) ? 'checked' : ''}`;
+      row.className = 'page-row';
       row.dataset.pageId = page.id;
       row.innerHTML = `
-        <div class="checkbox-wrap">
-          <input type="checkbox" data-page-check="${page.id}"
-            ${selectedPages.has(page.id) ? 'checked' : ''} />
-        </div>
+        ${cbHTML(`data-page-check="${page.id}" ${selectedPages.has(page.id) ? 'checked' : ''}`)}
         <div class="page-name">${page.name}</div>
         <div class="page-status" id="page-status-${page.id}"></div>
       `;
@@ -724,16 +875,27 @@
     } else {
       selectedPages.add(pageId);
     }
-    const row = document.querySelector(`[data-page-id="${pageId}"]`);
     const cb = document.querySelector(`[data-page-check="${pageId}"]`);
-    if (row) row.classList.toggle('checked', selectedPages.has(pageId));
     if (cb) cb.checked = selectedPages.has(pageId);
     updateFooter();
   }
 
+  // Page toolbar: select all / none
+  document.getElementById('btn-pages-all').addEventListener('click', () => {
+    allPages.forEach(p => selectedPages.add(p.id));
+    document.querySelectorAll('[data-page-check]').forEach(cb => cb.checked = true);
+    updateFooter();
+  });
+
+  document.getElementById('btn-pages-none').addEventListener('click', () => {
+    selectedPages.clear();
+    document.querySelectorAll('[data-page-check]').forEach(cb => cb.checked = false);
+    updateFooter();
+  });
+
   function markPageScanning(pageId) {
     const el = document.getElementById(`page-status-${pageId}`);
-    if (el) el.innerHTML = `<div class="page-scanning"><div class="spinner"></div> Scanning…</div>`;
+    if (el) el.innerHTML = `<div class="page-scanning"><div class="spinner"></div> Scanning...</div>`;
   }
 
   function markPageDone(pageId, count) {
@@ -754,8 +916,6 @@
   }
 
   function renderComponentsIncremental() {
-    // During scanning, show a growing list below the page rows
-    // We re-render the component section only, leaving page rows intact
     let compSection = document.getElementById('comp-section');
     if (!compSection) {
       compSection = document.createElement('div');
@@ -779,9 +939,7 @@
             <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5"
               stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <div class="checkbox-wrap">
-            <input type="checkbox" data-group-check="${groupName}" />
-          </div>
+          ${cbHTML(`data-group-check="${groupName}"`)}
           <div class="group-name">${groupName}</div>
           <div class="group-count">
             <span class="selected-count" data-group-selected="${groupName}">${selectedInGroup}</span>
@@ -792,10 +950,7 @@
           ${items.map(c => `
             <div class="component-row ${selectedNodes.has(c.nodeId) ? 'checked' : ''}"
                  data-node="${c.nodeId}">
-              <div class="checkbox-wrap">
-                <input type="checkbox" data-node-check="${c.nodeId}"
-                  ${selectedNodes.has(c.nodeId) ? 'checked' : ''} />
-              </div>
+              ${cbHTML(`data-node-check="${c.nodeId}" ${selectedNodes.has(c.nodeId) ? 'checked' : ''}`)}
               <div class="component-meta">
                 <div class="component-name">${leafName(c.figmaName)}</div>
                 ${c.page ? `<div class="component-page">${c.page}</div>` : ''}
@@ -804,15 +959,8 @@
                 ${c.properties && c.properties.length > 0
                   ? `<div class="component-prop-count">${c.properties.length} prop${c.properties.length !== 1 ? 's' : ''}</div>`
                   : ''}
-                <button class="btn-locate" data-locate="${c.nodeId}"
-                  title="Jump to component in Figma">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <circle cx="12" cy="12" r="6"/>
-                    <circle cx="12" cy="12" r="2"/>
-                  </svg>
+                <button class="btn-locate" data-locate="${c.nodeId}" title="Jump to component in Figma">
+                  ${ICON_TARGET}
                 </button>
               </div>
             </div>
@@ -826,17 +974,12 @@
     attachComponentListeners();
   }
 
-  function switchToComponentsView() {
-    // Hide page rows, show only comp-section with full-height scroll
-    document.getElementById('list').querySelectorAll('.page-row').forEach(r => r.remove());
-  }
-
   function leafName(figmaName) {
     const parts = figmaName.split('/');
     return parts[parts.length - 1].trim();
   }
 
-  // ── Listeners ─────────────────────────────────────────────────────────────
+  // ── Component listeners ───────────────────────────────────────────────────
   function attachComponentListeners() {
     document.querySelectorAll('[data-group-toggle]').forEach(el => {
       el.addEventListener('click', (e) => {
@@ -899,7 +1042,7 @@
     updateFooter();
   }
 
-  // ── Toolbar (component step) ──────────────────────────────────────────────
+  // ── Component toolbar ─────────────────────────────────────────────────────
   document.getElementById('btn-select-all').addEventListener('click', () => {
     filteredComponents().forEach(c => selectedNodes.add(c.nodeId));
     refreshCheckboxes();
@@ -927,15 +1070,11 @@
   }
 
   function renderFilteredComponents() {
-    const filtered = filteredComponents();
-    const compSection = document.getElementById('comp-section');
-    if (!compSection) return;
-    buildGroups(filtered);
-    // Re-use incremental renderer - it will reflect the filtered set
+    buildGroups(filteredComponents());
     renderComponentsIncremental();
   }
 
-  // ── Refresh UI state ──────────────────────────────────────────────────────
+  // ── Refresh state ─────────────────────────────────────────────────────────
   function refreshCheckboxes() {
     document.querySelectorAll('[data-node]').forEach(row => {
       const checked = selectedNodes.has(row.dataset.node);
@@ -966,7 +1105,7 @@
     if (step === STEP.WELCOME) {
       summary.innerHTML = '';
       btn.textContent = 'Get started';
-      btn.disabled = allPages.length === 0; // disabled only while pages haven't loaded yet
+      btn.disabled = allPages.length === 0;
 
     } else if (step === STEP.PAGES) {
       const n = selectedPages.size;
@@ -977,8 +1116,8 @@
       btn.disabled = n === 0;
 
     } else if (step === STEP.SCANNING) {
-      summary.innerHTML = `Scanning <strong>${scanDone}</strong> / ${scanTotal} pages…`;
-      btn.textContent = 'Scanning…';
+      summary.innerHTML = `Scanning <strong>${scanDone}</strong> / ${scanTotal} pages...`;
+      btn.textContent = 'Scanning...';
       btn.disabled = true;
 
     } else {
@@ -991,21 +1130,18 @@
     }
   }
 
-  // ── Footer button action ──────────────────────────────────────────────────
+  // ── Footer button ─────────────────────────────────────────────────────────
   document.getElementById('btn-action').addEventListener('click', () => {
-    if (step === STEP.WELCOME) {
-      showPages();
-    } else if (step === STEP.PAGES) {
-      startScan();
-    } else if (step === STEP.COMPONENTS) {
-      exportComponents();
-    }
+    if (step === STEP.WELCOME)      showPages();
+    else if (step === STEP.PAGES)      startScan();
+    else if (step === STEP.COMPONENTS) exportComponents();
   });
 
   function showPages() {
     step = STEP.PAGES;
     document.getElementById('welcome').classList.add('hidden');
     document.getElementById('header').classList.remove('hidden');
+    document.getElementById('pages-toolbar').classList.remove('hidden');
     document.getElementById('list').classList.remove('hidden');
     document.getElementById('header-subtitle').textContent = 'Choose pages to scan';
     renderPages();
@@ -1017,13 +1153,12 @@
     scanTotal = selectedPages.size;
     scanDone = 0;
     allComponents = [];
+    skippedComponents = [];
+    document.getElementById('pages-toolbar').classList.add('hidden');
     updateFooter();
 
     parent.postMessage({
-      pluginMessage: {
-        type: 'scan',
-        pageIds: [...selectedPages],
-      }
+      pluginMessage: { type: 'scan', pageIds: [...selectedPages] }
     }, '*');
   }
 
