@@ -11,129 +11,265 @@ The goal is that a non-engineer - a designer, a product manager - can complete t
 
 ---
 
-## What this skill does
+## Tone and format rules
 
-1. Reads `figma-components.json` from the Figma plugin export
-2. Scans the codebase to find matching components
-3. Presents a matching review table with confidence scores for the user to confirm
-4. Generates all `.figma.ts` stub files for confirmed matches
-5. Runs `npm run publish` to push snippets live to Figma Dev Mode
-6. Generates a `HANDOFF.md` for the engineering team
-7. Optionally guides the user through saving the files to the repository
+- Always tell the user what you just did before asking for the next thing
+- Always end a message that requires user action with a clear, specific instruction in bold - what to say or do next
+- Show progress at the start of every message: **[Step X of 6]**
+- Never combine two questions in the same message
+- Never move to the next step silently - always confirm what you received
 
 ---
 
 ## Step 0 - Opening
 
-Before asking anything, open with a single short message that explains what is about to happen:
-
-"Great - let's get your Figma components connected to your codebase. I'll match each component to its code counterpart, generate the connection files, and publish them to Figma Dev Mode. You won't need to write any code or run any commands yourself. To get started, I just need a couple of things from you."
-
-Then ask the following questions one at a time. Do not combine them.
+Open with a single message. Do not ask anything yet.
 
 ---
 
-## Step 1 - Preflight checks
+Hi! I'll help you connect your Figma components to your codebase so developers see live code snippets in Figma Dev Mode instead of auto-generated placeholders.
 
-Ask each question separately using `ask_user_input`.
+Here's what we'll do together:
 
-**Question 1 - figma-components.json**
+1. **Install the plugin** - a one-time setup in Figma
+2. **Export your components** - run the plugin to scan your library
+3. **Match to code** - I'll pair each Figma component with its code counterpart
+4. **Generate files** - I'll write all the connection files automatically
+5. **Publish** - push everything live to Dev Mode
+6. **Hand off** - create a summary for your engineering team
 
-Ask: "Do you have a `figma-components.json` file from the Figma plugin?"
-Options:
-- Yes, I have the file
-- I have not run the plugin yet
+You won't need to write any code or run any terminal commands yourself.
 
-If they have not run the plugin, explain how to get it:
-1. Clone the repository at https://github.com/louriach/figma-code-connect-boilerplate
-2. Run `cd plugin && npm install && npm run build`
-3. In Figma, go to Menu > Plugins > Development > Import plugin from manifest
-4. Select `plugin/manifest.json`
-5. Open the Figma file containing the component library
-6. Run the plugin, select the components, and click Export
+**To get started, have you used the Code Connect Export plugin before?** Reply **'yes'** if you have the plugin set up, or **'no'** if this is your first time.
 
-Wait until they confirm they have the file before continuing.
+---
 
-**Question 2 - file path**
+## Step 1 - Plugin setup [Step 1 of 6]
 
-Ask: "What is the path to your `figma-components.json` file? You can drag it into this window or type the path."
+### If they have used the plugin before
 
-Read the file at the path they provide. If it cannot be read, ask them to check the path and try again.
+Skip to Step 2.
 
-**Question 3 - repository**
+### If this is their first time
 
-Ask: "What is the path to your codebase? This is the folder where your components live."
+Reply with this message exactly:
 
-Confirm the path exists and that it contains component files before continuing.
+---
 
-**Question 4 - framework**
+**[Step 1 of 6] Install the plugin**
 
-Scan the repository to detect the framework automatically (look for `package.json`, `.swift` files, `build.gradle`, etc). If it is clear, confirm with the user rather than asking. If it is ambiguous, ask:
+The plugin is a small tool that runs inside Figma and scans your component library. You only need to install it once.
 
-"What framework is your codebase using?"
-Options:
-- React (JavaScript or TypeScript)
+**What you'll need:**
+- Node.js installed on your computer ([download here](https://nodejs.org) if you don't have it)
+- Access to the Figma file with your component library
+
+**Step 1 of 3 - Download and build the plugin**
+
+Open your terminal and run these commands one at a time:
+
+```
+git clone https://github.com/louriach/figma-code-connect-boilerplate.git
+cd figma-code-connect-boilerplate/plugin
+npm install
+npm run build
+```
+
+**Once those commands finish, reply 'done' and I'll walk you through loading it into Figma.**
+
+---
+
+Wait for confirmation before continuing.
+
+### After they confirm the build is done
+
+Reply with:
+
+---
+
+**Step 2 of 3 - Load the plugin into Figma**
+
+1. Open Figma
+2. Click the Figma logo (top left) → **Plugins** → **Development** → **Import plugin from manifest**
+3. Navigate to the folder you cloned and select **`plugin/manifest.json`**
+4. The plugin will appear under **Plugins → Development → Code Connect Export**
+
+**Once you've imported it, reply 'done'.**
+
+---
+
+Wait for confirmation before continuing.
+
+### After they confirm the plugin is loaded
+
+Reply with:
+
+---
+
+**Step 3 of 3 - Run the plugin and export your components**
+
+1. Open the Figma file that contains your component library
+2. Click the Figma logo → **Plugins** → **Development** → **Code Connect Export**
+3. The plugin will open. Select the pages you want to scan and click **Scan selected pages**
+4. Once scanning is complete, click **Export** on the result card
+5. A file called `figma-components.json` will download to your computer
+
+**When you have the file, reply 'done' and we'll move on.**
+
+---
+
+Wait for confirmation before continuing. Then move to Step 2.
+
+---
+
+## Step 2 - Load the export [Step 2 of 6]
+
+Ask:
+
+---
+
+**[Step 2 of 6] Load your export**
+
+What is the path to your `figma-components.json` file? You can drag the file into this window or type the path.
+
+---
+
+Read the file at the path they provide.
+
+If the file cannot be read: tell them what went wrong and ask them to check the path and try again.
+
+If the file is read successfully: confirm what was found before asking the next question:
+
+---
+
+Got it. I can see **[X] components** across **[N] pages** from **[fileName]**, exported by [exportedBy.name].
+
+**[Step 2 of 6] One more thing - what is the path to your codebase?** This is the root folder where your components live (e.g. `/Users/you/projects/my-design-system`).
+
+---
+
+Read the directory at the path they provide. If it does not exist or contains no component files: say so and ask them to check. If it exists and contains component files: confirm what you found.
+
+---
+
+Found it. I can see a [framework] project with component files in [path].
+
+---
+
+If the framework is ambiguous, ask before continuing:
+
+---
+
+I want to make sure I generate the right file format. What framework is your codebase using?
+
+- React (TypeScript or JavaScript)
 - Vue
 - SwiftUI
 - Jetpack Compose
 - Angular
 - Plain HTML
 
+**Reply with the name of your framework.**
+
 ---
 
-## Step 2 - Component matching
+---
 
-Read the `figma-components.json` file and scan the codebase to find matching components.
+## Step 3 - Component matching [Step 3 of 6]
 
-For each component in the export, attempt to find the matching code component using this approach:
+Tell the user what is about to happen before starting:
 
-**Step 2a - Normalisation**
-Strip Figma group prefixes (e.g. `Button / Primary` becomes `Button`), remove spaces, normalise case. Check for an exact or case-insensitive match in the repository.
+---
 
-**Step 2b - Semantic inference**
-If no exact match, use design-to-code naming heuristics to find the most likely match:
-- `Form / Input / Text` -> `TextInput`
-- `Navigation Bar` -> `NavBar` or `Navbar`
-- `Icon / Arrow Right` -> `ArrowRightIcon`
+**[Step 3 of 6] Matching components**
 
-**Step 2c - Confidence scoring**
-Assign each match a confidence tier:
-- High: exact or near-exact match after normalisation
-- Medium: semantic match inferred from naming patterns
-- Low: no confident match found
+I'm now scanning your codebase and matching each Figma component to its code counterpart. This may take a moment...
 
-**Step 2d - Present the matching review table**
+---
 
-Present every component as a row. Do not generate any files until the user has reviewed and confirmed the matches.
+Scan the codebase. For each component in the export, attempt to find the matching code component:
 
-Format:
+**3a - Normalisation**
+Strip Figma group prefixes (`Button / Primary` → `Button`), remove spaces, normalise case. Check for an exact or case-insensitive match in the repository.
+
+**3b - Semantic inference**
+If no exact match, use design-to-code naming heuristics:
+- `Form / Input / Text` → `TextInput`
+- `Navigation Bar` → `NavBar` or `Navbar`
+- `Icon / Arrow Right` → `ArrowRightIcon`
+
+**3c - Confidence scoring**
+- **High**: exact or near-exact match after normalisation
+- **Medium**: semantic match inferred from naming patterns
+- **Low**: no confident match found
+
+**3d - Present the matching review table**
+
+Once matching is complete, present every component as a row:
+
+---
+
+Done. I matched **[X] of [Y]** components. Here's what I found:
 
 ```
-Figma Component          Code Match        Confidence   Action
-Button / Primary         Button            High         [Confirm] [Edit] [Skip]
-Button / Secondary       Button            High         [Confirm] [Edit] [Skip]
-Form / Input / Text      TextInput         Medium       [Confirm] [Edit] [Skip]
-Navigation Bar           NavBar            Medium       [Confirm] [Edit] [Skip]
-Tooltip / Dark           ?                 Low          [type component name]
+Figma Component          Code Match        Confidence
+─────────────────────────────────────────────────────
+Button / Primary         Button            ● High
+Button / Secondary       Button            ● High
+Form / Input / Text      TextInput         ◐ Medium
+Navigation Bar           NavBar            ◐ Medium
+Tooltip / Dark           ?                 ○ Low
+Overlay / Scrim          ?                 ○ Low
 ```
+
+**High confidence** matches are ready to go. **Medium and Low** rows need your input before I generate any files.
+
+You can:
+- **'confirm all'** - accept everything including medium matches
+- **'confirm all high'** - confirm only the high confidence ones and I'll ask about the rest
+- **'skip all low'** - exclude unmatched components from this run
+- Tell me specific changes: *'change NavBar to NavigationBar'*, *'skip Overlay / Scrim'*
+
+**What would you like to do?**
+
+---
 
 Rules:
-- High rows are pre-confirmed. Tell the user they can change any of them.
-- Medium and Low rows require explicit action before proceeding.
-- Offer bulk actions: "Confirm all high", "Skip all low", "Confirm all"
-- For edited rows, re-run prop mapping against the corrected component name before confirming.
+- Do not generate any files until every row has been confirmed, edited, or skipped
+- For edited rows, re-run prop mapping against the corrected name before confirming
+- For rows with no match, ask the user to provide the component name or skip it
 
-Do not move to Step 3 until every row has been confirmed, edited, or skipped.
+Once all rows are resolved, save confirmed mappings to `figma-connect.map.json` in the repository root. On future runs, check this file first and skip inference for already-mapped components.
 
-Save all confirmed mappings to `figma-connect.map.json` in the repository root. On future runs, check this file first and skip inference for already-mapped components.
+After saving, confirm to the user:
 
 ---
 
-## Step 3 - Generate stub files
+All matches saved. Moving on to generating the connection files.
 
-For each confirmed match, generate a `.figma.ts` file.
+---
 
-Read the TypeScript interface or prop types for the matched component and use them to map Figma properties to code props.
+---
+
+## Step 4 - Generate stub files [Step 4 of 6]
+
+Tell the user before starting:
+
+---
+
+**[Step 4 of 6] Generating files**
+
+Writing connection files for [X] confirmed components...
+
+---
+
+For each confirmed match, generate a `.figma.ts` file. Read the TypeScript interface or prop types for the matched component and use them to map Figma properties to code props.
+
+Use the property type data from the export where available:
+- `VARIANT` properties → `figma.enum()`
+- `BOOLEAN` properties → `figma.boolean()`
+- `TEXT` properties → `figma.string()`
+- `INSTANCE_SWAP` properties → `figma.instance()`
 
 Example output for a Button component:
 
@@ -163,17 +299,35 @@ figma.connect(Button, "https://www.figma.com/file/FILE_KEY?node-id=NODE_ID", {
 });
 ```
 
-Place each file alongside its component file, or in a `/figma` subdirectory if the team prefers to keep them separate. Ask if unsure.
+Multiple Figma components mapping to the same code component (e.g. Button / Primary and Button / Secondary → Button) should produce a single `.figma.ts` file covering both via variant prop mapping.
 
-Multiple Figma components that map to the same code component (e.g. Button / Primary and Button / Secondary both mapping to Button) should produce a single `.figma.ts` file that covers both via the variant prop mapping, not two separate files.
+Place each file alongside its component file. If the team prefers a `/figma` subdirectory, ask before generating.
+
+Once all files are written, confirm:
 
 ---
 
-## Step 4 - Publish
+Done. I've written [X] files:
+- `Button.figma.ts`
+- `TextInput.figma.ts`
+- `NavBar.figma.ts`
+- ...
 
-Before publishing, check that Code Connect is configured:
+Now I need to publish these to Figma. First, I need to check one thing.
 
-1. Check for `figma.config.json` in the repository. If it does not exist, generate it:
+---
+
+---
+
+## Step 5 - Publish [Step 5 of 6]
+
+### 5a - Check configuration
+
+Check for `figma.config.json`. If it does not exist, generate it and tell the user what you created:
+
+---
+
+I've created `figma.config.json` to tell Figma how to read these files:
 
 ```json
 {
@@ -185,76 +339,103 @@ Before publishing, check that Code Connect is configured:
 }
 ```
 
-Adjust `parser` and `label` for the detected framework.
+---
 
-2. Check that `package.json` includes a publish script. If not, add one:
+Check that `package.json` includes a publish script. If not, add one and tell the user.
 
-```json
-"scripts": {
-  "publish": "figma connect publish"
-}
-```
+### 5b - Figma access token
 
-3. Check for a Figma access token in `.env`. If it does not exist, ask the user to generate one:
-
-"You will need a Figma access token to publish. In Figma, go to Settings > Security > Personal access tokens, create a new token with Code Connect write access, and paste it here."
-
-Store the token in `.env` as `FIGMA_ACCESS_TOKEN=...` and confirm `.env` is in `.gitignore`.
-
-4. Run `npm run publish` and confirm it completes without errors.
-
-If errors occur, diagnose and fix them inline. Common errors:
-- Invalid file key: re-check the URL in the `.figma.ts` file
-- Missing parser: ensure the correct framework parser is installed
-- Auth failure: re-check the access token
+Check for `FIGMA_ACCESS_TOKEN` in `.env`. If it does not exist, ask:
 
 ---
 
-## Step 5 - Confirm live in Dev Mode
+To publish, I need a Figma access token. Here's how to get one:
 
-After publishing, ask the user to check in Figma:
+1. In Figma, click your avatar (top right) → **Settings**
+2. Go to **Security** → **Personal access tokens**
+3. Click **Generate new token**
+4. Give it a name (e.g. "Code Connect"), set expiry if you like, and under scopes make sure **Code Connect: Write** is selected
+5. Copy the token
 
-"Open your Figma file, select one of the connected components, and open Dev Mode (the `</>` icon at the top right). You should see a code snippet with your real component name and props. Can you confirm you can see it?"
+**Paste just the raw token value here** (it will look something like `figd_xxxxxxxx`). I'll store it securely and it won't be shared.
+
+---
+
+Store the token in `.env` as `FIGMA_ACCESS_TOKEN=<value>` and confirm `.env` is in `.gitignore`. Tell the user once stored:
+
+---
+
+Token saved. Publishing now...
+
+---
+
+### 5c - Run publish
+
+Run `npm run publish`. Report the outcome:
+
+If successful:
+
+---
+
+Published successfully. All [X] components are now live in Figma Dev Mode.
+
+---
+
+If errors occur, diagnose and fix them inline without asking the user:
+- Invalid file key: re-check the URL in the `.figma.ts` file
+- Missing parser: run `npm install @figma/code-connect` and retry
+- Auth failure: tell the user the token may be wrong and ask them to paste a new one
+
+---
+
+## Step 6 - Confirm and close [Step 6 of 6]
+
+Ask the user to verify in Figma before wrapping up:
+
+---
+
+**[Step 6 of 6] Let's confirm it's working**
+
+Open your Figma file, select any connected component, and open Dev Mode using the **`</>`** icon at the top right. You should see a code snippet showing your real component name and props.
+
+**Reply 'yes' if you can see it, or describe what you see if something looks off.**
+
+---
 
 If they cannot see it, check:
-- Is the Figma file key in `figma.config.json` correct?
+- Is the Figma file key in the generated files correct?
 - Did the publish command complete without errors?
-- Is Dev Mode available on their Figma plan?
+- Is Dev Mode available on their Figma plan? (requires Organisation or Enterprise)
+
+Once the user confirms it is working:
 
 ---
 
-## Step 6 - Closing stage
+**You're done.** Here's a summary of what happened:
 
-Once the user confirms the snippets are live, do not end the conversation. Cover the following.
+- **[X] components** are now live in Figma Dev Mode
+- Connection files are in [path]
+- Confirmed mappings are saved to `figma-connect.map.json` - future runs will reuse these automatically
 
-**What you just did**
+---
 
-Summarise briefly:
-- How many components are now live in Dev Mode
-- Where the generated `.figma.ts` files are
-- A reminder to open Figma and verify a component
+Then ask:
 
-**Maintenance question**
+---
 
-Ask explicitly:
+One last thing: if a component is renamed or its props change in the future, someone will need to update the files and republish. **Who on your team will own that?** (You can say 'me', 'an engineer', or 'not sure yet'.)
 
-"If a component is renamed or its props change in the future, someone will need to update these files and republish. Who on your team will own that?"
+---
 
-- If they say they will own it: continue to the repository push section
-- If they say an engineer will: generate the HANDOFF.md and guide them to share it
-- If they are unsure: generate the HANDOFF.md and explain both options
-
-**Generate HANDOFF.md**
-
-Always generate a `HANDOFF.md` regardless of the answer above. Use this format:
+Then generate `HANDOFF.md` regardless of their answer. Use this format:
 
 ```markdown
 # Code Connect Handoff
 
 **Generated:** [ISO timestamp]
-**Figma file:** [file name]
-**Figma URL:** [full URL]
-**Run by:** [Figma username from the export metadata]
+**Figma file:** [fileName]
+**Figma URL:** https://www.figma.com/file/[fileKey]
+**Run by:** [exportedBy.name]
 
 ## What was connected
 
@@ -287,21 +468,27 @@ If a component is renamed or its props change:
 
 ## How to add more components
 
-Run the Code Connect Export plugin in Figma again, export a new `figma-components.json`, and run this skill again. Previously confirmed mappings are saved in `figma-connect.map.json` and will be reused automatically.
+Run the Code Connect Export plugin again, export a new `figma-components.json`, and run this skill again. Previously confirmed mappings are saved in `figma-connect.map.json` and will be reused automatically.
 ```
 
-**Optional: push to repository**
+Tell the user the file is ready, then ask:
 
-Ask: "Would you like to save these files to your repository so the team has them long-term? This will create a pull request an engineer can review and merge."
+---
+
+I've also created `HANDOFF.md` with a full summary for your engineering team.
+
+**Would you like to save all these files to your repository?** I can create a pull request that an engineer can review and merge. Reply **'yes'** or **'no'**.
+
+---
 
 If yes:
-1. Check for Git. If not installed, guide them through installing it for their platform.
+1. Check for Git. If not installed, guide them through installing it for their platform step by step.
 2. Run `git add` for the generated files
 3. Run `git commit -m "Add Code Connect stubs for [n] components"`
-4. Run `gh pr create` with a clear title and description listing the connected components
-5. Share the PR link and tell them to send it to an engineer to merge
+4. Run `gh pr create` with a clear title and body listing the connected components
+5. Share the PR link: **"Send this link to an engineer to review and merge: [url]"**
 
-If no: tell them where the files live locally and that they can hand them to an engineer at any time.
+If no: tell them where the files live locally and that they can share them with an engineer at any time.
 
 ---
 
@@ -310,20 +497,20 @@ If no: tell them where the files live locally and that they can hand them to an 
 | File | Purpose | Commit? |
 |---|---|---|
 | `figma-components.json` | Plugin export | Optional |
-| `figma-connect.map.json` | Confirmed name mappings | Yes |
+| `figma-connect.map.json` | Confirmed name mappings - reused on future runs | Yes |
 | `*.figma.ts` | One per connected code component | Yes |
-| `HANDOFF.md` | Summary for the engineering team | Yes |
-| `.env` | Figma access token | No |
+| `HANDOFF.md` | Plain-language summary for the receiving engineer | Yes |
+| `.env` | Figma access token | No - never commit this |
 
 ---
 
 ## Error handling
 
-Handle these inline without stopping the flow:
+Handle all errors inline without stopping the flow or asking the user to do anything technical:
 
-- **File not found**: ask the user to re-check the path
+- **File not found**: tell them what path you tried and ask them to check it
 - **No components in export**: ask if the plugin was run on the right page
-- **No matching component in repo**: mark as Low confidence and ask the user to provide the name
-- **Publish fails with auth error**: guide the user to regenerate the access token
-- **Publish fails with missing parser**: run `npm install @figma/code-connect` and retry
-- **Dev Mode not showing snippet**: check file key, check plan, retry publish
+- **No matching component in repo**: mark as Low confidence, ask the user to provide the name or skip
+- **Publish fails with auth error**: tell the user the token may have expired, walk them through generating a new one
+- **Publish fails with missing parser**: run `npm install @figma/code-connect` and retry automatically
+- **Dev Mode not showing snippet**: check file key, check plan, retry publish - report findings clearly before asking the user anything
