@@ -167,7 +167,7 @@ Ask:
 
 **[Step 2 of 6] Load your export**
 
-What is the path to your `figma-components.json` file? You can drag the file into this window or type the path.
+What is the path to your `figma-components.json` file? For example: `/Users/you/Downloads/figma-components.json`
 
 ---
 
