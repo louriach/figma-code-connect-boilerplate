@@ -38,10 +38,17 @@ function getGroup(name: string): string {
   return parts.length > 1 ? parts[0].trim() : 'Ungrouped';
 }
 
-/** Extract property names from a component or component set node. */
+/** Extract property names from a component or component set node.
+ *  Wrapped in try/catch because component sets with broken references
+ *  (missing styles, detached instances) throw on property access.
+ */
 function getProperties(node: ComponentNode | ComponentSetNode): string[] {
-  if (!node.componentPropertyDefinitions) return [];
-  return Object.keys(node.componentPropertyDefinitions);
+  try {
+    if (!node.componentPropertyDefinitions) return [];
+    return Object.keys(node.componentPropertyDefinitions);
+  } catch {
+    return [];
+  }
 }
 
 /** Build the Figma deep-link URL for a node. */
@@ -73,28 +80,36 @@ function scanPage(page: PageNode): ComponentExport[] {
   // Collect component sets (grouped variants)
   const componentSets = page.findAllWithCriteria({ types: ['COMPONENT_SET'] }) as ComponentSetNode[];
   for (const node of componentSets) {
-    results.push({
-      nodeId: node.id,
-      figmaName: node.name,
-      group: getGroup(node.name),
-      page: page.name,
-      url: buildUrl(fileKey, node.id),
-      properties: getProperties(node),
-    });
+    try {
+      results.push({
+        nodeId: node.id,
+        figmaName: node.name,
+        group: getGroup(node.name),
+        page: page.name,
+        url: buildUrl(fileKey, node.id),
+        properties: getProperties(node),
+      });
+    } catch {
+      // Skip component sets with unrecoverable errors (broken references, etc.)
+    }
   }
 
   // Collect standalone components (not children of a component set)
   const components = page.findAllWithCriteria({ types: ['COMPONENT'] }) as ComponentNode[];
   for (const node of components) {
     if (node.parent?.type === 'COMPONENT_SET') continue; // variant - skip
-    results.push({
-      nodeId: node.id,
-      figmaName: node.name,
-      group: getGroup(node.name),
-      page: page.name,
-      url: buildUrl(fileKey, node.id),
-      properties: getProperties(node),
-    });
+    try {
+      results.push({
+        nodeId: node.id,
+        figmaName: node.name,
+        group: getGroup(node.name),
+        page: page.name,
+        url: buildUrl(fileKey, node.id),
+        properties: getProperties(node),
+      });
+    } catch {
+      // Skip components with unrecoverable errors
+    }
   }
 
   results.sort((a, b) => {
