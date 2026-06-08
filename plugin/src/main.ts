@@ -68,76 +68,92 @@ function getFileKey(): string {
   return figma.fileKey ?? 'unknown';
 }
 
-/** Scan a single page and return its components plus any skipped nodes.
- *
- * Figma has three relevant node types:
- *   COMPONENT_SET  - the container for a set of variants (e.g. "Button")
- *   COMPONENT      - either a standalone component OR a variant inside a set
- *
- * For Code Connect we want one entry per logical component:
- *   - COMPONENT_SET nodes  -> include, read properties from the set
- *   - Standalone COMPONENTs (parent is not a COMPONENT_SET) -> include
- *   - Variant COMPONENTs   (parent IS a COMPONENT_SET) -> skip; covered by the set
- */
 function log(pageId: string, message: string): void {
   figma.ui.postMessage({ type: 'scan-log', pageId, message });
 }
 
-function scanPage(page: PageNode): { components: ComponentExport[]; skipped: SkippedComponent[] } {
+/** Yield to the event loop so queued postMessages reach the UI iframe
+ *  before the next blocking findAllWithCriteria call. */
+function yield_(): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+/** Scan a single page frame-by-frame, yielding between each top-level
+ *  child so the UI stays responsive and log messages arrive in real time.
+ *
+ *  findAllWithCriteria on the whole page blocks the sandbox thread for as
+ *  long as it takes — on a large page that can be many seconds with no
+ *  feedback. Scanning each top-level frame individually with a yield
+ *  between them means the UI receives log updates after each frame and the
+ *  user can see exactly which frame is slow.
+ */
+async function scanPage(page: PageNode): Promise<{ components: ComponentExport[]; skipped: SkippedComponent[] }> {
   const fileKey = getFileKey();
   const components: ComponentExport[] = [];
   const skipped: SkippedComponent[] = [];
+  const topLevel = [...page.children];
 
-  // Step 1: find all component sets
-  log(page.id, 'Finding component sets...');
-  const componentSets = page.findAllWithCriteria({ types: ['COMPONENT_SET'] }) as ComponentSetNode[];
-  log(page.id, `Found ${componentSets.length} component set${componentSets.length !== 1 ? 's' : ''}, reading properties...`);
+  for (let i = 0; i < topLevel.length; i++) {
+    const child = topLevel[i];
+    log(page.id, `[${i + 1}/${topLevel.length}] "${child.name}"`);
+    await yield_(); // flush log message to UI before blocking call
 
-  for (const node of componentSets) {
-    try {
-      components.push({
-        nodeId: node.id,
-        figmaName: node.name,
-        group: getGroup(node.name),
-        page: page.name,
-        url: buildUrl(fileKey, node.id),
-        properties: getProperties(node),
-      });
-    } catch (err) {
-      skipped.push({
-        figmaName: node.name,
-        page: page.name,
-        reason: err instanceof Error ? err.message : 'Unknown error',
-      });
+    // Component sets in this frame
+    let sets: ComponentSetNode[] = [];
+    if (child.type === 'COMPONENT_SET') {
+      sets = [child as ComponentSetNode];
+    } else if ('findAllWithCriteria' in child) {
+      sets = (child as ChildrenMixin).findAllWithCriteria({ types: ['COMPONENT_SET'] }) as ComponentSetNode[];
+    }
+
+    for (const node of sets) {
+      try {
+        components.push({
+          nodeId: node.id,
+          figmaName: node.name,
+          group: getGroup(node.name),
+          page: page.name,
+          url: buildUrl(fileKey, node.id),
+          properties: getProperties(node),
+        });
+      } catch (err) {
+        skipped.push({
+          figmaName: node.name,
+          page: page.name,
+          reason: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
+    }
+
+    // Standalone components in this frame (not inside a component set)
+    let standalone: ComponentNode[] = [];
+    if (child.type === 'COMPONENT' && child.parent?.type !== 'COMPONENT_SET') {
+      standalone = [child as ComponentNode];
+    } else if ('findAllWithCriteria' in child) {
+      const all = (child as ChildrenMixin).findAllWithCriteria({ types: ['COMPONENT'] }) as ComponentNode[];
+      standalone = all.filter(n => n.parent?.type !== 'COMPONENT_SET');
+    }
+
+    for (const node of standalone) {
+      try {
+        components.push({
+          nodeId: node.id,
+          figmaName: node.name,
+          group: getGroup(node.name),
+          page: page.name,
+          url: buildUrl(fileKey, node.id),
+          properties: getProperties(node),
+        });
+      } catch (err) {
+        skipped.push({
+          figmaName: node.name,
+          page: page.name,
+          reason: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
     }
   }
 
-  // Step 2: find standalone components
-  log(page.id, `Finding standalone components...`);
-  const allComponents = page.findAllWithCriteria({ types: ['COMPONENT'] }) as ComponentNode[];
-  const standalone = allComponents.filter(n => n.parent?.type !== 'COMPONENT_SET');
-  log(page.id, `Found ${standalone.length} standalone component${standalone.length !== 1 ? 's' : ''}...`);
-
-  for (const node of standalone) {
-    try {
-      components.push({
-        nodeId: node.id,
-        figmaName: node.name,
-        group: getGroup(node.name),
-        page: page.name,
-        url: buildUrl(fileKey, node.id),
-        properties: getProperties(node),
-      });
-    } catch (err) {
-      skipped.push({
-        figmaName: node.name,
-        page: page.name,
-        reason: err instanceof Error ? err.message : 'Unknown error',
-      });
-    }
-  }
-
-  log(page.id, `Sorting ${components.length} components...`);
   components.sort((a, b) => {
     const groupCmp = a.group.localeCompare(b.group);
     return groupCmp !== 0 ? groupCmp : a.figmaName.localeCompare(b.figmaName);
@@ -184,7 +200,7 @@ figma.ui.onmessage = async (msg) => {
       // Notify UI that this page is being scanned
       figma.ui.postMessage({ type: 'scan-page-start', pageId, pageName: page.name });
 
-      const { components, skipped } = scanPage(page);
+      const { components, skipped } = await scanPage(page);
 
       // Stream this page's results to the UI as soon as they're ready
       figma.ui.postMessage({ type: 'scan-page-done', pageId, pageName: page.name, components, skipped });
