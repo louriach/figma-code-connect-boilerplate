@@ -94,6 +94,15 @@
       line-height: 16px;
     }
 
+    .tab-count {
+      font-size: var(--size-xs);
+      background: var(--surface-alt);
+      color: var(--text-tertiary);
+      border-radius: 10px;
+      padding: 0 5px;
+      line-height: 16px;
+    }
+
     /* ── Panels ── */
     .panel {
       flex: 1;
@@ -214,7 +223,6 @@
       flex-direction: column;
     }
 
-    /* Boxed page list */
     .page-list-box {
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
@@ -290,179 +298,121 @@
       color: var(--text-accent);
     }
 
-    /* ── Export panel ── */
-    .export-toolbar {
+    /* ── Export panel: scan cards ── */
+    .export-content {
+      padding: 12px;
       display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
     }
 
-    .search {
-      flex: 1;
-      background: var(--surface);
+    /* Card */
+    .scan-card {
       border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-family: var(--font);
-      font-size: var(--size-base);
-      padding: 5px 10px;
-      outline: none;
-      transition: border-color 0.15s;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      flex-shrink: 0;
     }
 
-    .search::placeholder { color: var(--text-tertiary); }
-    .search:focus { border-color: var(--accent); }
-
-    .export-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 6px 0;
-    }
-
-    .export-list::-webkit-scrollbar { width: 4px; }
-    .export-list::-webkit-scrollbar-track { background: transparent; }
-    .export-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    /* ── Component groups ── */
-    .group { margin-bottom: 2px; }
-
-    .group-header {
+    .scan-card-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 5px 12px;
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.1s;
+      justify-content: space-between;
+      padding: 10px 12px 9px;
+      background: var(--surface);
     }
 
-    .group-header:hover { background: var(--surface-alt); }
-
-    .group-chevron {
-      width: 12px;
-      height: 12px;
-      color: var(--text-tertiary);
-      flex-shrink: 0;
-      transition: transform 0.15s;
+    .scan-card-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
     }
 
-    .group-chevron.open { transform: rotate(90deg); }
-
-    .group-name {
+    .scan-card-title {
       font-size: var(--size-sm);
       font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      flex: 1;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .group-count {
+    .scan-card-time {
       font-size: var(--size-xs);
       color: var(--text-tertiary);
     }
 
-    .group-count .selected-count { color: var(--text-accent); }
-    .group-items.collapsed { display: none; }
-
-    /* ── Component row ── */
-    .component-row {
+    .scan-card-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 5px 12px 5px 32px;
-      cursor: pointer;
-      transition: background 0.1s;
+      gap: 6px;
+      flex-shrink: 0;
+      margin-left: 10px;
     }
 
-    .component-row:hover { background: var(--surface-alt); }
-    .component-row.checked { background: var(--accent-dim); }
-    .component-row.checked:hover { background: var(--accent-hover); }
-    .component-row:hover .btn-locate { opacity: 1; }
+    /* Card stats row */
+    .scan-card-stats {
+      display: flex;
+      border-top: 1px solid var(--border);
+    }
 
-    .component-meta {
+    .scan-stat {
       flex: 1;
-      min-width: 0;
+      padding: 8px 12px;
+      border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       gap: 1px;
     }
 
-    .component-name {
+    .scan-stat:last-child { border-right: none; }
+
+    .scan-stat-value {
       font-size: var(--size-base);
+      font-weight: 600;
       color: var(--text-primary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      line-height: 1.2;
     }
 
-    .component-page {
-      font-size: var(--size-xs);
-      color: var(--text-tertiary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .scan-stat-value.warn { color: var(--text-warn); }
 
-    .component-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .component-prop-count {
+    .scan-stat-label {
       font-size: var(--size-xs);
       color: var(--text-tertiary);
     }
 
-    .btn-locate {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      border: none;
-      background: none;
-      color: var(--text-tertiary);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.15s, color 0.15s, background 0.15s;
-      flex-shrink: 0;
-      padding: 0;
-    }
-
-    .btn-locate:hover { color: var(--text-accent); background: var(--accent-dim); }
-    .btn-locate svg { width: 13px; height: 13px; }
-
-    /* ── Log panel ── */
-    .log-row {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+    /* Card pages list */
+    .scan-card-pages {
+      border-top: 1px solid var(--border);
       padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
     }
 
-    .log-row:last-child { border-bottom: none; }
-    .log-name { font-size: var(--size-base); color: var(--text-primary); }
-    .log-detail { font-size: var(--size-xs); color: var(--text-warn); }
+    .page-chip {
+      font-size: var(--size-xs);
+      color: var(--text-secondary);
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
 
-    .empty-state {
+    /* In-progress card */
+    .scan-card.in-progress .scan-card-header {
+      background: var(--surface);
+    }
+
+    .scanning-pulse {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      flex: 1;
       gap: 6px;
+      font-size: var(--size-xs);
       color: var(--text-tertiary);
-      font-size: var(--size-sm);
-      padding: 32px 24px;
-      text-align: center;
     }
 
     /* ── Shared button styles ── */
@@ -483,12 +433,24 @@
     .btn-text.muted { color: var(--text-secondary); }
     .btn-text.muted:hover { color: var(--text-primary); background: var(--surface-alt); }
 
-    .toolbar-divider {
-      width: 1px;
-      height: 14px;
-      background: var(--border);
-      flex-shrink: 0;
+    /* Small export button on cards */
+    .btn-export {
+      background: var(--accent-dim);
+      border: 1px solid rgba(168, 213, 181, 0.25);
+      color: var(--text-accent);
+      font-family: var(--font);
+      font-size: var(--size-xs);
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: var(--radius-md);
+      white-space: nowrap;
+      transition: background 0.15s, opacity 0.15s;
+      letter-spacing: 0.01em;
     }
+
+    .btn-export:hover { background: var(--accent-hover); }
+    .btn-export:disabled { opacity: 0.35; cursor: not-allowed; }
 
     /* ── Custom checkbox ── */
     .checkbox-wrap {
@@ -519,11 +481,6 @@
       border-color: var(--accent);
     }
 
-    .checkbox-wrap input[type="checkbox"]:indeterminate {
-      background: var(--accent-dim);
-      border-color: var(--accent);
-    }
-
     .cb-icon {
       position: absolute;
       inset: 0;
@@ -537,14 +494,6 @@
     .cb-icon svg { width: 9px; height: 9px; display: none; }
     .checkbox-wrap input:checked ~ .cb-icon svg.cb-check { display: block; }
 
-    .checkbox-wrap input[type="checkbox"]:indeterminate::after {
-      content: '';
-      position: absolute;
-      left: 2.5px; top: 5px;
-      width: 7px; height: 1.5px;
-      background: var(--accent);
-    }
-
     /* ── Spinner ── */
     .spinner {
       width: 11px;
@@ -557,6 +506,34 @@
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Log panel ── */
+    .log-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .log-row:last-child { border-bottom: none; }
+    .log-name { font-size: var(--size-base); color: var(--text-primary); }
+    .log-detail { font-size: var(--size-xs); color: var(--text-warn); }
+
+    /* ── Empty / loading states ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 6px;
+      color: var(--text-tertiary);
+      font-size: var(--size-sm);
+      padding: 32px 24px;
+      text-align: center;
+      min-height: 120px;
+    }
 
     /* ── Footer ── */
     .footer {
@@ -628,7 +605,10 @@
   <div class="tabs">
     <button class="tab" data-tab="home">Home</button>
     <button class="tab active" data-tab="pages">Pages</button>
-    <button class="tab" data-tab="export">Export</button>
+    <button class="tab" data-tab="export">
+      Export
+      <span class="tab-count hidden" id="export-count">0</span>
+    </button>
     <button class="tab" data-tab="log">
       Log
       <span class="tab-badge hidden" id="log-badge">0</span>
@@ -663,15 +643,15 @@
         <div class="welcome-step">
           <div class="step-number">2</div>
           <div class="step-content">
-            <div class="step-title">Select components</div>
-            <div class="step-desc">Review the components found and check the ones you want to include in the export.</div>
+            <div class="step-title">Scan</div>
+            <div class="step-desc">The plugin finds every main component on the selected pages and records them.</div>
           </div>
         </div>
         <div class="welcome-step">
           <div class="step-number">3</div>
           <div class="step-content">
             <div class="step-title">Export</div>
-            <div class="step-desc">Download <code style="font-size:10px;color:var(--text-accent)">figma-components.json</code> and hand it to the Claude skill to finish setup.</div>
+            <div class="step-desc">Download <code style="font-size:10px;color:var(--text-accent)">figma-components.json</code> from any scan and hand it to the Claude skill to finish setup.</div>
           </div>
         </div>
       </div>
@@ -691,7 +671,6 @@
           </div>
         </div>
         <div class="page-list-rows" id="page-list-rows">
-          <!-- page rows injected here -->
           <div class="empty-state" id="pages-loading">
             <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
           </div>
@@ -700,18 +679,12 @@
     </div>
   </div>
 
-  <!-- Export panel -->
+  <!-- Export panel: scan cards -->
   <div class="panel hidden" id="panel-export">
-    <div class="export-toolbar">
-      <input class="search" type="text" placeholder="Filter components..." id="search" />
-      <button class="btn-text" id="btn-select-all">All</button>
-      <div class="toolbar-divider"></div>
-      <button class="btn-text muted" id="btn-deselect-all">Clear</button>
-    </div>
-    <div class="export-list" id="export-list">
+    <div class="export-content" id="export-content">
       <div class="empty-state" id="export-empty">
-        <div>No components yet</div>
-        <div style="color:var(--text-tertiary);font-size:var(--size-xs)">Go to Pages and scan to find components</div>
+        <div>No exports yet</div>
+        <div style="color:var(--text-tertiary);font-size:var(--size-xs)">Scan some pages to create an export</div>
       </div>
     </div>
   </div>
@@ -732,9 +705,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── Icons ─────────────────────────────────────────────────────────────────
-  const ICON_TARGET = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
-
+  // ── Checkbox helper ───────────────────────────────────────────────────────
   function cbHTML(attrs) {
     return `<div class="checkbox-wrap">
       <input type="checkbox" ${attrs} />
@@ -743,18 +714,21 @@
   }
 
   // ── State ─────────────────────────────────────────────────────────────────
-  let activeTab    = 'pages';
-  let scanState    = 'idle';   // 'idle' | 'scanning' | 'done'
+  let activeTab   = 'pages';
+  let scanState   = 'idle';   // 'idle' | 'scanning' | 'done'
 
-  let allPages         = [];
-  let selectedPages    = new Set();
-  let allComponents    = [];
-  let skippedComponents = [];
-  let selectedNodes    = new Set();
-  let collapsed        = new Set();
-  let scanTotal        = 0;
-  let scanDone         = 0;
-  let groups           = {};
+  let allPages      = [];
+  let selectedPages = new Set();
+
+  // Completed scans accumulate across the session
+  // { id, number, pages, components, skipped, startedAt, finishedAt }
+  let scans = [];
+
+  // The scan currently in progress (accumulates incrementally)
+  let activeScan = null;
+
+  let scanTotal = 0;
+  let scanDone  = 0;
 
   // ── Tab switching ─────────────────────────────────────────────────────────
   const PANELS = { home: 'panel-home', pages: 'panel-pages', export: 'panel-export', log: 'panel-log' };
@@ -767,7 +741,6 @@
     Object.entries(PANELS).forEach(([t, id]) => {
       document.getElementById(id).classList.toggle('hidden', t !== tab);
     });
-
     if (tab === 'log') renderLog();
     updateFooter();
   }
@@ -800,20 +773,20 @@
 
       case 'scan-page-done':
         markPageDone(msg.pageId, msg.components.length);
-        allComponents = allComponents.concat(msg.components);
-        msg.components.forEach(c => selectedNodes.add(c.nodeId));
-        if (msg.skipped && msg.skipped.length) {
-          skippedComponents = skippedComponents.concat(msg.skipped);
-          updateLogBadge();
+        if (activeScan) {
+          activeScan.components = activeScan.components.concat(msg.components);
+          if (msg.skipped && msg.skipped.length) {
+            activeScan.skipped = activeScan.skipped.concat(msg.skipped);
+          }
         }
         scanDone++;
-        renderComponentsIncremental();
+        updateInProgressCard();
         updateFooter();
         break;
 
       case 'scan-complete':
+        finaliseActiveScan();
         scanState = 'done';
-        // Auto-switch to export tab only if user is still on pages
         if (activeTab === 'pages') switchTab('export');
         updateFooter();
         break;
@@ -855,9 +828,7 @@
         <div class="page-status" id="page-status-${page.id}"></div>
       `;
       row.addEventListener('click', (e) => {
-        if (e.target.closest('.checkbox-wrap')) return;
-        // Don't toggle while scanning
-        if (scanState === 'scanning') return;
+        if (e.target.closest('.checkbox-wrap') || scanState === 'scanning') return;
         togglePage(page.id);
       });
       row.querySelector('[data-page-check]').addEventListener('change', () => {
@@ -869,11 +840,8 @@
   }
 
   function togglePage(pageId) {
-    if (selectedPages.has(pageId)) {
-      selectedPages.delete(pageId);
-    } else {
-      selectedPages.add(pageId);
-    }
+    if (selectedPages.has(pageId)) selectedPages.delete(pageId);
+    else                           selectedPages.add(pageId);
     const cb = document.querySelector(`[data-page-check="${pageId}"]`);
     if (cb) cb.checked = selectedPages.has(pageId);
     updateFooter();
@@ -895,7 +863,7 @@
 
   function markPageScanning(pageId) {
     const el = document.getElementById(`page-status-${pageId}`);
-    if (el) el.innerHTML = `<div class="page-scanning"><div class="spinner"></div> <span id="page-log-${pageId}">Scanning...</span></div>`;
+    if (el) el.innerHTML = `<div class="page-scanning"><div class="spinner"></div><span id="page-log-${pageId}">Scanning...</span></div>`;
   }
 
   function updatePageLog(pageId, message) {
@@ -908,181 +876,167 @@
     if (el) el.innerHTML = `<div class="page-done">${count} component${count !== 1 ? 's' : ''}</div>`;
   }
 
-  // ── Export panel ──────────────────────────────────────────────────────────
-  function renderComponentsIncremental() {
-    const exportEmpty = document.getElementById('export-empty');
-    if (exportEmpty) exportEmpty.remove();
+  // ── Scan cards ────────────────────────────────────────────────────────────
 
-    let compSection = document.getElementById('comp-section');
-    if (!compSection) {
-      compSection = document.createElement('div');
-      compSection.id = 'comp-section';
-      document.getElementById('export-list').appendChild(compSection);
+  function formatTime(date) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /** Create or update the "in progress" card during scanning. */
+  function updateInProgressCard() {
+    if (!activeScan) return;
+    let card = document.getElementById('card-inprogress');
+    if (!card) {
+      // First call: create the card skeleton and append it
+      const empty = document.getElementById('export-empty');
+      if (empty) empty.remove();
+
+      card = document.createElement('div');
+      card.className = 'scan-card in-progress';
+      card.id = 'card-inprogress';
+      document.getElementById('export-content').prepend(card);
     }
 
-    buildGroups(allComponents);
-    compSection.innerHTML = '';
+    const componentCount = activeScan.components.length;
+    const skippedCount   = activeScan.skipped.length;
+    const pageChips      = activeScan.pages
+      .map(p => `<span class="page-chip">${p}</span>`)
+      .join('');
 
-    Object.entries(groups).forEach(([groupName, items]) => {
-      const isCollapsed    = collapsed.has(groupName);
-      const selectedInGroup = items.filter(c => selectedNodes.has(c.nodeId)).length;
-
-      const groupEl = document.createElement('div');
-      groupEl.className = 'group';
-      groupEl.dataset.group = groupName;
-      groupEl.innerHTML = `
-        <div class="group-header" data-group-toggle="${groupName}">
-          <svg class="group-chevron ${isCollapsed ? '' : 'open'}" viewBox="0 0 12 12" fill="none">
-            <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          ${cbHTML(`data-group-check="${groupName}"`)}
-          <div class="group-name">${groupName}</div>
-          <div class="group-count">
-            <span class="selected-count" data-group-selected="${groupName}">${selectedInGroup}</span>
-            <span> / ${items.length}</span>
+    card.innerHTML = `
+      <div class="scan-card-header">
+        <div class="scan-card-meta">
+          <div class="scan-card-title">
+            Scan ${activeScan.number}
+            <div class="scanning-pulse"><div class="spinner"></div></div>
           </div>
+          <div class="scan-card-time">Started ${formatTime(activeScan.startedAt)}</div>
         </div>
-        <div class="group-items ${isCollapsed ? 'collapsed' : ''}" data-group-items="${groupName}">
-          ${items.map(c => `
-            <div class="component-row ${selectedNodes.has(c.nodeId) ? 'checked' : ''}" data-node="${c.nodeId}">
-              ${cbHTML(`data-node-check="${c.nodeId}" ${selectedNodes.has(c.nodeId) ? 'checked' : ''}`)}
-              <div class="component-meta">
-                <div class="component-name">${leafName(c.figmaName)}</div>
-                ${c.page ? `<div class="component-page">${c.page}</div>` : ''}
-              </div>
-              <div class="component-right">
-                ${c.properties && c.properties.length > 0
-                  ? `<div class="component-prop-count">${c.properties.length} prop${c.properties.length !== 1 ? 's' : ''}</div>`
-                  : ''}
-                <button class="btn-locate" data-locate="${c.nodeId}" title="Jump to component">
-                  ${ICON_TARGET}
-                </button>
-              </div>
-            </div>
-          `).join('')}
+        <div class="scan-card-actions">
+          <button class="btn-export" disabled>Export</button>
         </div>
-      `;
-      compSection.appendChild(groupEl);
-    });
-
-    refreshGroupCheckboxes();
-    attachComponentListeners();
+      </div>
+      <div class="scan-card-stats">
+        <div class="scan-stat">
+          <div class="scan-stat-value">${scanDone}&thinsp;/&thinsp;${scanTotal}</div>
+          <div class="scan-stat-label">Pages scanned</div>
+        </div>
+        <div class="scan-stat">
+          <div class="scan-stat-value">${componentCount}</div>
+          <div class="scan-stat-label">Components found</div>
+        </div>
+        ${skippedCount > 0 ? `
+        <div class="scan-stat">
+          <div class="scan-stat-value warn">${skippedCount}</div>
+          <div class="scan-stat-label">Skipped</div>
+        </div>` : ''}
+      </div>
+      <div class="scan-card-pages">${pageChips}</div>
+    `;
   }
 
-  function leafName(figmaName) {
-    const parts = figmaName.split('/');
-    return parts[parts.length - 1].trim();
+  /** Replace the in-progress card with a finished card and add to scans[]. */
+  function finaliseActiveScan() {
+    if (!activeScan) return;
+
+    activeScan.finishedAt = new Date();
+    scans.push(activeScan);
+
+    // Update skipped log
+    if (activeScan.skipped.length) updateLogBadge();
+
+    // Render the finished card (replaces in-progress card)
+    renderScanCard(activeScan, true);
+    activeScan = null;
+
+    // Update Export tab count badge
+    const countEl = document.getElementById('export-count');
+    countEl.textContent = scans.length;
+    countEl.classList.remove('hidden');
   }
 
-  function buildGroups(components) {
-    groups = {};
-    components.forEach(c => {
-      const g = c.group || 'Ungrouped';
-      if (!groups[g]) groups[g] = [];
-      groups[g].push(c);
+  /** Render a completed scan as a card. replaceInProgress = swap the live card. */
+  function renderScanCard(scan, replaceInProgress = false) {
+    const componentCount = scan.components.length;
+    const skippedCount   = scan.skipped.length;
+    const pageChips      = scan.pages.map(p => `<span class="page-chip">${p}</span>`).join('');
+    const duration       = Math.round((scan.finishedAt - scan.startedAt) / 1000);
+    const durationStr    = duration < 60
+      ? `${duration}s`
+      : `${Math.floor(duration / 60)}m ${duration % 60}s`;
+
+    const card = document.createElement('div');
+    card.className = 'scan-card';
+    card.id = `card-${scan.id}`;
+    card.innerHTML = `
+      <div class="scan-card-header">
+        <div class="scan-card-meta">
+          <div class="scan-card-title">Scan ${scan.number}</div>
+          <div class="scan-card-time">${formatTime(scan.startedAt)} &middot; ${durationStr}</div>
+        </div>
+        <div class="scan-card-actions">
+          <button class="btn-export" data-scan-id="${scan.id}">Export</button>
+        </div>
+      </div>
+      <div class="scan-card-stats">
+        <div class="scan-stat">
+          <div class="scan-stat-value">${scan.pages.length}</div>
+          <div class="scan-stat-label">Page${scan.pages.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="scan-stat">
+          <div class="scan-stat-value">${componentCount}</div>
+          <div class="scan-stat-label">Component${componentCount !== 1 ? 's' : ''}</div>
+        </div>
+        ${skippedCount > 0 ? `
+        <div class="scan-stat">
+          <div class="scan-stat-value warn">${skippedCount}</div>
+          <div class="scan-stat-label">Skipped</div>
+        </div>` : ''}
+      </div>
+      <div class="scan-card-pages">${pageChips}</div>
+    `;
+
+    card.querySelector('[data-scan-id]').addEventListener('click', () => {
+      exportScan(scan.id);
     });
+
+    if (replaceInProgress) {
+      const live = document.getElementById('card-inprogress');
+      if (live) live.replaceWith(card);
+      else      document.getElementById('export-content').prepend(card);
+    } else {
+      document.getElementById('export-content').prepend(card);
+    }
   }
 
-  // ── Component listeners ───────────────────────────────────────────────────
-  function attachComponentListeners() {
-    document.querySelectorAll('[data-group-toggle]').forEach(el => {
-      el.addEventListener('click', (e) => {
-        if (e.target.closest('.checkbox-wrap')) return;
-        const g       = el.dataset.groupToggle;
-        const chevron = el.querySelector('.group-chevron');
-        const items   = document.querySelector(`[data-group-items="${g}"]`);
-        if (collapsed.has(g)) {
-          collapsed.delete(g);
-          chevron.classList.add('open');
-          items.classList.remove('collapsed');
-        } else {
-          collapsed.add(g);
-          chevron.classList.remove('open');
-          items.classList.add('collapsed');
-        }
-      });
-    });
-
-    document.querySelectorAll('[data-group-check]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const g     = cb.dataset.groupCheck;
-        const items = groups[g] || [];
-        if (cb.checked) items.forEach(c => selectedNodes.add(c.nodeId));
-        else             items.forEach(c => selectedNodes.delete(c.nodeId));
-        refreshCheckboxes();
-        updateFooter();
-      });
-    });
-
-    document.querySelectorAll('[data-node]').forEach(row => {
-      row.addEventListener('click', (e) => {
-        if (e.target.closest('.checkbox-wrap') || e.target.closest('.btn-locate')) return;
-        toggleNode(row.dataset.node);
-      });
-    });
-
-    document.querySelectorAll('[data-node-check]').forEach(cb => {
-      cb.addEventListener('change', () => toggleNode(cb.dataset.nodeCheck));
-    });
-
-    document.querySelectorAll('[data-locate]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        parent.postMessage({ pluginMessage: { type: 'locate', nodeId: btn.dataset.locate } }, '*');
-      });
-    });
-  }
-
-  function toggleNode(nodeId) {
-    if (selectedNodes.has(nodeId)) selectedNodes.delete(nodeId);
-    else                           selectedNodes.add(nodeId);
-    refreshCheckboxes();
-    updateFooter();
-  }
-
-  // ── Export toolbar ────────────────────────────────────────────────────────
-  document.getElementById('btn-select-all').addEventListener('click', () => {
-    filteredComponents().forEach(c => selectedNodes.add(c.nodeId));
-    refreshCheckboxes();
-    updateFooter();
-  });
-
-  document.getElementById('btn-deselect-all').addEventListener('click', () => {
-    filteredComponents().forEach(c => selectedNodes.delete(c.nodeId));
-    refreshCheckboxes();
-    updateFooter();
-  });
-
-  document.getElementById('search').addEventListener('input', () => {
-    buildGroups(filteredComponents());
-    renderComponentsIncremental();
-    refreshCheckboxes();
-  });
-
-  function filteredComponents() {
-    const q = document.getElementById('search').value.toLowerCase().trim();
-    return q
-      ? allComponents.filter(c =>
-          c.figmaName.toLowerCase().includes(q) ||
-          (c.page && c.page.toLowerCase().includes(q)))
-      : allComponents;
+  function exportScan(scanId) {
+    const scan = scans.find(s => s.id === scanId);
+    if (!scan) return;
+    parent.postMessage({
+      pluginMessage: { type: 'export', components: scan.components }
+    }, '*');
   }
 
   // ── Log panel ─────────────────────────────────────────────────────────────
+  function allSkipped() {
+    return scans.flatMap(s => s.skipped);
+  }
+
   function updateLogBadge() {
+    const total = scans.reduce((n, s) => n + s.skipped.length, 0);
     const badge = document.getElementById('log-badge');
-    if (skippedComponents.length > 0) {
-      badge.textContent = skippedComponents.length;
+    if (total > 0) {
+      badge.textContent = total;
       badge.classList.remove('hidden');
     }
   }
 
   function renderLog() {
-    const panel = document.getElementById('panel-log');
+    const panel   = document.getElementById('panel-log');
+    const skipped = allSkipped();
     panel.innerHTML = '';
 
-    if (skippedComponents.length === 0) {
+    if (skipped.length === 0) {
       panel.innerHTML = `<div class="empty-state">
         <div>No issues found</div>
         <div style="color:var(--text-tertiary);font-size:var(--size-xs)">All components scanned without errors</div>
@@ -1090,37 +1044,14 @@
       return;
     }
 
-    skippedComponents.forEach(s => {
+    skipped.forEach(s => {
       const row = document.createElement('div');
       row.className = 'log-row';
       row.innerHTML = `
         <div class="log-name">${s.figmaName}</div>
-        <div class="log-detail">${s.page} - ${s.reason}</div>
+        <div class="log-detail">${s.page} &middot; ${s.reason}</div>
       `;
       panel.appendChild(row);
-    });
-  }
-
-  // ── Refresh checkboxes ────────────────────────────────────────────────────
-  function refreshCheckboxes() {
-    document.querySelectorAll('[data-node]').forEach(row => {
-      const checked = selectedNodes.has(row.dataset.node);
-      const cb      = row.querySelector('[data-node-check]');
-      if (cb) cb.checked = checked;
-      row.classList.toggle('checked', checked);
-    });
-    refreshGroupCheckboxes();
-  }
-
-  function refreshGroupCheckboxes() {
-    Object.entries(groups).forEach(([groupName, items]) => {
-      const cb      = document.querySelector(`[data-group-check="${groupName}"]`);
-      const countEl = document.querySelector(`[data-group-selected="${groupName}"]`);
-      if (!cb) return;
-      const n = items.filter(c => selectedNodes.has(c.nodeId)).length;
-      if (countEl) countEl.textContent = n;
-      cb.checked      = n === items.length;
-      cb.indeterminate = n > 0 && n < items.length;
     });
   }
 
@@ -1130,73 +1061,54 @@
     const btn     = document.getElementById('btn-action');
     const footer  = document.getElementById('footer');
 
-    if (activeTab === 'home' || activeTab === 'log') {
+    if (activeTab === 'home' || activeTab === 'export' || activeTab === 'log') {
       footer.classList.add('hidden');
       return;
     }
 
     footer.classList.remove('hidden');
 
-    if (activeTab === 'pages') {
-      if (scanState === 'scanning') {
-        summary.innerHTML = `Scanning <strong>${scanDone}</strong>&thinsp;/&thinsp;${scanTotal} pages`;
-        btn.textContent   = 'Scanning...';
-        btn.disabled      = true;
-      } else {
-        const n = selectedPages.size;
-        summary.innerHTML = n === 0
-          ? 'No pages selected'
-          : `<strong>${n}</strong> page${n !== 1 ? 's' : ''} selected`;
-        btn.textContent = 'Scan selected pages';
-        btn.disabled    = n === 0;
-      }
-
-    } else if (activeTab === 'export') {
-      const n = selectedNodes.size;
+    // Pages tab
+    if (scanState === 'scanning') {
+      summary.innerHTML = `Scanning <strong>${scanDone}</strong>&thinsp;/&thinsp;${scanTotal} pages`;
+      btn.textContent   = 'Scanning...';
+      btn.disabled      = true;
+    } else {
+      const n = selectedPages.size;
       summary.innerHTML = n === 0
-        ? 'No components selected'
-        : `<strong>${n}</strong> component${n !== 1 ? 's' : ''} selected`;
-      btn.textContent = 'Export';
+        ? 'No pages selected'
+        : `<strong>${n}</strong> page${n !== 1 ? 's' : ''} selected`;
+      btn.textContent = 'Scan selected pages';
       btn.disabled    = n === 0;
     }
   }
 
-  // ── Footer button action ──────────────────────────────────────────────────
   document.getElementById('btn-action').addEventListener('click', () => {
-    if (activeTab === 'pages')  startScan();
-    if (activeTab === 'export') exportComponents();
+    if (activeTab === 'pages') startScan();
   });
 
   function startScan() {
     if (scanState === 'scanning') return;
-    scanState  = 'scanning';
-    scanTotal  = selectedPages.size;
-    scanDone   = 0;
 
-    // Reset prior results
-    allComponents     = [];
-    skippedComponents = [];
-    selectedNodes     = new Set();
-    groups            = {};
+    scanState = 'scanning';
+    scanTotal = selectedPages.size;
+    scanDone  = 0;
 
-    // Clear log badge
-    const badge = document.getElementById('log-badge');
-    badge.textContent = '';
-    badge.classList.add('hidden');
+    // Build the list of page names for the selected page IDs
+    const pageNames = [...selectedPages]
+      .map(id => allPages.find(p => p.id === id)?.name ?? id);
 
-    // Clear component list
-    const compSection = document.getElementById('comp-section');
-    if (compSection) compSection.remove();
-    const exportList = document.getElementById('export-list');
-    if (!document.getElementById('export-empty')) {
-      const emptyEl = document.createElement('div');
-      emptyEl.className = 'empty-state';
-      emptyEl.id = 'export-empty';
-      emptyEl.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>`;
-      exportList.appendChild(emptyEl);
-    }
+    activeScan = {
+      id:         Date.now(),
+      number:     scans.length + 1,
+      pages:      pageNames,
+      components: [],
+      skipped:    [],
+      startedAt:  new Date(),
+      finishedAt: null,
+    };
 
-    // Reset page status indicators
+    // Reset page status indicators from any previous scan
     allPages.forEach(p => {
       const el = document.getElementById(`page-status-${p.id}`);
       if (el) el.innerHTML = '';
@@ -1209,14 +1121,9 @@
     }, '*');
   }
 
-  function exportComponents() {
-    const toExport = allComponents.filter(c => selectedNodes.has(c.nodeId));
-    parent.postMessage({ pluginMessage: { type: 'export', components: toExport } }, '*');
-  }
-
   // ── Toast ─────────────────────────────────────────────────────────────────
   function showToast(message, type = '') {
-    const toast    = document.getElementById('toast');
+    const toast       = document.getElementById('toast');
     toast.textContent = message;
     toast.className   = `toast visible ${type}`;
     setTimeout(() => toast.classList.remove('visible'), 2500);
