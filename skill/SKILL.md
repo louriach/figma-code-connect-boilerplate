@@ -43,15 +43,19 @@ Open with this message instead of the standard opening:
 
 Hi! I'll help you connect your Figma components to your codebase so developers see live code snippets in Figma Dev Mode.
 
-I can see I'm running in the Claude desktop app, so I'll work in **assisted mode** — I'll guide you through each step, generate all the files you need, and give you simple commands to copy and run. You'll need to paste a few things to me along the way, but I'll always tell you exactly what I need.
+I can see I'm running in the Claude desktop app, so I'll work in **assisted mode**. Here's what that means practically:
+
+- I'll generate all the files — you save them
+- I'll give you commands to copy and run — you paste the output back
+- You won't need to write any code yourself
 
 Here's what we'll do:
 
-1. **Install the plugin** - a one-time setup in Figma
+1. **Install the plugin** - a one-time setup requiring a few terminal commands
 2. **Export your components** - run the plugin to scan your library
 3. **Match to code** - I'll pair each Figma component with its code counterpart
 4. **Generate files** - I'll write all the connection files for you to save
-5. **Publish** - I'll give you a single command to run in your terminal
+5. **Publish** - I'll give you one command to copy and run in your terminal
 6. **Hand off** - create a summary for your engineering team
 
 **To get started, have you used the Code Connect Export plugin before?** Reply **'yes'** if you have the plugin set up, or **'no'** if this is your first time.
@@ -70,14 +74,14 @@ Hi! I'll help you connect your Figma components to your codebase so developers s
 
 Here's what we'll do together:
 
-1. **Install the plugin** - a one-time setup in Figma
+1. **Install the plugin** - a one-time setup that requires a few terminal commands
 2. **Export your components** - run the plugin to scan your library
 3. **Match to code** - I'll pair each Figma component with its code counterpart
 4. **Generate files** - I'll write all the connection files automatically
 5. **Publish** - push everything live to Dev Mode
 6. **Hand off** - create a summary for your engineering team
 
-You won't need to write any code or run any terminal commands yourself.
+You won't need to write any code yourself. I'll handle all the terminal commands from here — the only exception is the one-time plugin install in Step 1.
 
 **To get started, have you used the Code Connect Export plugin before?** Reply **'yes'** if you have the plugin set up, or **'no'** if this is your first time.
 
